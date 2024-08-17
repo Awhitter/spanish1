@@ -3,7 +3,8 @@ import * as XLSX from 'xlsx';
 import './AdminPage.css';
 import io from 'socket.io-client';
 
-const socket = io('http://localhost:5000');
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000';
+const socket = io(BACKEND_URL);
 
 function AdminPage() {
   const [exercises, setExercises] = useState([]);
@@ -48,7 +49,7 @@ function AdminPage() {
 
   const fetchExercises = async () => {
     try {
-      const response = await fetch('http://localhost:5000/exercises');
+      const response = await fetch(`${BACKEND_URL}/exercises`);
       if (!response.ok) {
         throw new Error('Failed to fetch exercises');
       }
@@ -75,7 +76,7 @@ function AdminPage() {
   };
 
   const addExerciseToAPI = async (exercise) => {
-    const response = await fetch('http://localhost:5000/exercises', {
+    const response = await fetch(`${BACKEND_URL}/exercises`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -118,7 +119,7 @@ function AdminPage() {
 
   const handleUpdateExercise = async () => {
     try {
-      const response = await fetch(`http://localhost:5000/exercises/${editingExercise.id}`, {
+      const response = await fetch(`${BACKEND_URL}/exercises/${editingExercise.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -142,7 +143,7 @@ function AdminPage() {
 
   const handleDeleteExercise = async (id) => {
     try {
-      const response = await fetch(`http://localhost:5000/exercises/${id}`, {
+      const response = await fetch(`${BACKEND_URL}/exercises/${id}`, {
         method: 'DELETE',
       });
       if (!response.ok) {
