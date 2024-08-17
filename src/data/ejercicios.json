@@ -18,5 +18,97 @@
   {
     "pregunta": "Complete: El sol es _______.",
     "respuesta": "amarillo"
+  },
+  {
+    "pregunta": "Complete con el color correcto en español: La bandera de Brasil es ________ y ________.",
+    "respuesta": "verde y amarilla"
+  },
+  {
+    "pregunta": "Escriba el color en femenino: a) Blanco → _______ b) Negro → _______ c) Amarillo → _______",
+    "respuesta": "a) blanca b) negra c) amarilla"
+  },
+  {
+    "pregunta": "Escriba el plural de estos colores: a) Azul → _______ b) Gris → _______ c) Marrón → _______",
+    "respuesta": "a) azules b) grises c) marrones"
+  },
+  {
+    "pregunta": "Responda: ¿De qué color es típicamente el mar? Use una frase completa.",
+    "respuesta": "El mar es típicamente azul."
+  },
+  {
+    "pregunta": "Complete la frase con el color correcto en español: El cielo es ________ y las nubes son ________.",
+    "respuesta": "azul y blancas"
+  },
+  {
+    "pregunta": "Escriba los colores del arcoíris en español.",
+    "respuesta": "rojo, naranja, amarillo, verde, azul, añil, violeta"
+  },
+  {
+    "pregunta": "¿Qué color se forma al mezclar...? a) Amarillo + Azul = _______ b) Rojo + Amarillo = _______ c) Azul + Rojo = _______",
+    "respuesta": "a) verde b) naranja c) morado"
+  },
+  {
+    "pregunta": "Describa los colores de la bandera de Brasil en español.",
+    "respuesta": "La bandera de Brasil es verde, amarilla y azul."
+  },
+  {
+    "pregunta": "Complete con el color apropiado: a) La nieve es _______. b) El carbón es _______. c) Las hojas de los árboles son generalmente _______. d) El sol es _______.",
+    "respuesta": "a) blanca b) negro c) verdes d) amarillo"
+  },
+  {
+    "pregunta": "Escriba los colores de la bandera de España.",
+    "respuesta": "rojo y amarillo"
+  },
+  {
+    "pregunta": "Cree una frase usando al menos tres colores diferentes.",
+    "respuesta": "El cielo azul, el sol amarillo y las hojas verdes crean un hermoso paisaje."
+  },
+  {
+    "pregunta": "Identifique el intruso y explique por qué (en español): a) Rojo - Amarillo - Azul - Caliente b) Negro - Blanco - Redondo - Gris",
+    "respuesta": "a) Caliente, porque no es un color. b) Redondo, porque no es un color."
+  },
+  {
+    "pregunta": "Escriba cinco objetos y sus colores típicos en español.",
+    "respuesta": "1. Limón - amarillo 2. Cielo - azul 3. Hierba - verde 4. Nieve - blanca 5. Carbón - negro"
+  },
+  {
+    "pregunta": "Complete con la forma correcta del adjetivo de color: a) Las manzanas son (rojo) _______. b) Los plátanos son (amarillo) _______. c) El cielo es (azul) _______.",
+    "respuesta": "a) rojas b) amarillos c) azul"
+  },
+  {
+    "pregunta": "Escriba los opuestos de estos colores en español: a) Blanco → _______ b) Claro → _______ c) Oscuro → _______",
+    "respuesta": "a) negro b) oscuro c) claro"
+  },
+  {
+    "pregunta": "Responda en español: ¿Cuáles son los colores primarios?",
+    "respuesta": "Los colores primarios son rojo, azul y amarillo."
+  },
+  {
+    "pregunta": "Forme frases con estos pares de palabras: a) Rojo - pasión b) Verde - esperanza c) Azul - tranquilidad",
+    "respuesta": "a) El rojo simboliza la pasión. b) El verde representa la esperanza. c) El azul transmite tranquilidad."
+  },
+  {
+    "pregunta": "Complete las frases con el color más apropiado: a) El cielo despejado es _______. b) Las hojas frescas de los árboles son _______. c) La arena de la playa suele ser _______.",
+    "respuesta": "a) azul b) verdes c) beige"
+  },
+  {
+    "pregunta": "Describa los colores típicos de estos objetos cotidianos: a) Un taxi en su ciudad b) Una naranja madura c) Un periódico",
+    "respuesta": "a) amarillo b) naranja c) blanco y negro"
+  },
+  {
+    "pregunta": "Complete las frases con el color correcto en género y número: a) Las uvas pueden ser (verde) _______ o (morado) _______. b) Los girasoles tienen pétalos (amarillo) _______ y centro (marrón) _______. c) El arcoíris tiene franjas (rojo, naranja, amarillo, verde, azul, añil, violeta) _______, _______, _______, _______, _______, _______ y _______.",
+    "respuesta": "a) verdes o moradas b) amarillos, marrón c) rojas, naranjas, amarillas, verdes, azules, añiles y violetas"
+  },
+  {
+    "pregunta": "Describa los colores típicos de los siguientes alimentos: a) Una ensalada mediterránea b) Un plato de sushi c) Una paella valenciana",
+    "respuesta": "a) verde, rojo, blanco b) blanco, negro, rojo, verde c) amarillo, rojo, verde"
+  },
+  {
+    "pregunta": "Cree un breve párrafo descriptivo de su lugar favorito, utilizando al menos siete colores diferentes.",
+    "respuesta": "Mi lugar favorito es una playa tropical con arena dorada y aguas turquesas. El cielo azul está adornado con nubes blancas y el sol amarillo brilla intensamente. Las palmeras verdes se mecen suavemente, mientras que las coloridas flores rojas, moradas y naranjas adornan el paisaje."
+  },
+  {
+    "pregunta": "Complete las frases con los colores adecuados: a) El sol es _______ y el cielo es _______. b) La nieve es _______ y la noche es _______. c) Las hojas son _______ y las naranjas son _______.",
+    "respuesta": "a) amarillo, azul b) blanca, negra c) verdes, naranjas"
   }
 ]

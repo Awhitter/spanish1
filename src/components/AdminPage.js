@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import * as XLSX from 'xlsx';
+import './AdminPage.css';
 
 function AdminPage() {
   const [newQuestion, setNewQuestion] = useState('');
@@ -39,7 +40,7 @@ function AdminPage() {
   };
 
   return (
-    <div style={{ padding: '20px' }}>
+    <div className="admin-page">
       <h2>Admin Page</h2>
       <h3>Add New Exercise</h3>
       <input
@@ -66,7 +67,7 @@ function AdminPage() {
         ))}
       </ul>
 
-      <button onClick={handleSave}>Save All Exercises</button>
+      <button onClick={handleSave} className="save-button">Save All Exercises</button>
     </div>
   );
 }

@@ -1,50 +1,55 @@
 .ejercicios-espanol {
-  max-width: 400px;
-  margin: 0 auto;
-  padding: 20px;
+  max-width: 800px;
+  margin: 40px auto;
+  padding: 40px;
   background: linear-gradient(to bottom right, #e6f2ff, #f0e6ff);
-  border-radius: 10px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border-radius: 20px;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
 }
 
 h1 {
   color: #1e40af;
   text-align: center;
-  margin-bottom: 10px;
+  margin-bottom: 20px;
+  font-size: 36px;
 }
 
 .nivel {
   text-align: center;
   color: #4b5563;
-  margin-bottom: 20px;
+  margin-bottom: 30px;
+  font-size: 18px;
 }
 
 .ejercicio {
-  margin-bottom: 20px;
+  margin-bottom: 30px;
 }
 
 .pregunta {
-  font-size: 18px;
+  font-size: 24px;
   font-weight: 500;
   color: #1f2937;
-  margin-bottom: 10px;
+  margin-bottom: 20px;
 }
 
 input {
   width: 100%;
-  padding: 10px;
-  margin-bottom: 10px;
-  border: 1px solid #d1d5db;
-  border-radius: 4px;
+  padding: 15px;
+  margin-bottom: 20px;
+  border: 2px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 18px;
 }
 
 button {
   width: 100%;
-  padding: 10px;
+  padding: 15px;
   border: none;
-  border-radius: 4px;
+  border-radius: 8px;
   cursor: pointer;
   font-weight: bold;
+  font-size: 18px;
+  transition: background-color 0.3s ease;
 }
 
 .verificar {
@@ -59,7 +64,8 @@ button {
 .feedback {
   text-align: center;
   font-weight: bold;
-  margin-top: 10px;
+  margin-top: 20px;
+  font-size: 20px;
 }
 
 .correcto {
@@ -72,11 +78,11 @@ button {
 
 .progreso-container {
   width: 100%;
-  height: 10px;
+  height: 15px;
   background-color: #e5e7eb;
-  border-radius: 5px;
+  border-radius: 10px;
   overflow: hidden;
-  margin-top: 20px;
+  margin-top: 30px;
 }
 
 .progreso-bar {
@@ -88,19 +94,19 @@ button {
 .contador {
   text-align: center;
   color: #4b5563;
-  font-size: 14px;
-  margin-top: 10px;
+  font-size: 16px;
+  margin-top: 15px;
 }
 
 .botones {
   display: flex;
   justify-content: space-between;
-  margin-top: 20px;
+  margin-top: 30px;
 }
 
 .reiniciar, .siguiente {
   flex: 1;
-  margin: 0 5px;
+  margin: 0 10px;
 }
 
 .reiniciar {
