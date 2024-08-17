@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import * as XLSX from 'xlsx';
 import './AdminPage.css';
+import io from 'socket.io-client';
+
+const socket = io('http://localhost:5000');
 
 function AdminPage() {
   const [exercises, setExercises] = useState([]);
   const [editingExercise, setEditingExercise] = useState(null);
   const [newExercise, setNewExercise] = useState({
-    id: '',
     pregunta: '',
     keywords: [],
     acceptableAnswers: [],
@@ -16,18 +18,26 @@ function AdminPage() {
   });
 
   useEffect(() => {
-    // Load exercises from local storage on component mount
-    const savedExercises = localStorage.getItem('exercises');
-    if (savedExercises) {
-      setExercises(JSON.parse(savedExercises));
-    } else {
-      // If no exercises in local storage, load from json file
-      import('../data/ejercicios.json').then(data => {
-        setExercises(data.default);
-        localStorage.setItem('exercises', JSON.stringify(data.default));
-      });
-    }
+    fetchExercises();
+
+    socket.on('exercise_added', (newExercise) => {
+      setExercises(prevExercises => [...prevExercises, newExercise]);
+    });
+
+    return () => {
+      socket.off('exercise_added');
+    };
   }, []);
+
+  const fetchExercises = async () => {
+    try {
+      const response = await fetch('http://localhost:5000/exercises');
+      const data = await response.json();
+      setExercises(data);
+    } catch (error) {
+      console.error('Error fetching exercises:', error);
+    }
+  };
 
   const handleInputChange = (e, field) => {
     if (field === 'keywords' || field === 'acceptableAnswers') {
@@ -43,57 +53,97 @@ function AdminPage() {
     }
   };
 
-  const handleAddExercise = () => {
+  const addExerciseToAPI = async (exercise) => {
+    try {
+      const response = await fetch('http://localhost:5000/exercises', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(exercise),
+      });
+      if (!response.ok) {
+        throw new Error('Failed to add exercise');
+      }
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error adding exercise:', error);
+      throw error;
+    }
+  };
+
+  const handleAddExercise = async () => {
     if (newExercise.pregunta.trim() === '' || newExercise.acceptableAnswers.length === 0) {
       alert('Please enter both question and at least one acceptable answer.');
       return;
     }
-    const exerciseToAdd = {
-      ...newExercise,
-      id: Date.now().toString()
-    };
-    const updatedExercises = [...exercises, exerciseToAdd];
-    setExercises(updatedExercises);
-    localStorage.setItem('exercises', JSON.stringify(updatedExercises));
-    setNewExercise({
-      id: '',
-      pregunta: '',
-      keywords: [],
-      acceptableAnswers: [],
-      difficulty: 'easy',
-      category: '',
-      hint: ''
-    });
+    try {
+      const addedExercise = await addExerciseToAPI(newExercise);
+      setExercises([...exercises, addedExercise]);
+      setNewExercise({
+        pregunta: '',
+        keywords: [],
+        acceptableAnswers: [],
+        difficulty: 'easy',
+        category: '',
+        hint: ''
+      });
+    } catch (error) {
+      alert('Failed to add exercise. Please try again.');
+    }
   };
 
   const handleEditExercise = (exercise) => {
     setEditingExercise(exercise);
   };
 
-  const handleUpdateExercise = () => {
-    const updatedExercises = exercises.map(ex => ex.id === editingExercise.id ? editingExercise : ex);
-    setExercises(updatedExercises);
-    localStorage.setItem('exercises', JSON.stringify(updatedExercises));
-    setEditingExercise(null);
+  const handleUpdateExercise = async () => {
+    try {
+      const response = await fetch(`http://localhost:5000/exercises/${editingExercise.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(editingExercise),
+      });
+      if (!response.ok) {
+        throw new Error('Failed to update exercise');
+      }
+      const updatedExercise = await response.json();
+      setExercises(exercises.map(ex => ex.id === updatedExercise.id ? updatedExercise : ex));
+      setEditingExercise(null);
+    } catch (error) {
+      console.error('Error updating exercise:', error);
+      alert('Failed to update exercise. Please try again.');
+    }
   };
 
-  const handleDeleteExercise = (id) => {
-    const updatedExercises = exercises.filter(ex => ex.id !== id);
-    setExercises(updatedExercises);
-    localStorage.setItem('exercises', JSON.stringify(updatedExercises));
+  const handleDeleteExercise = async (id) => {
+    try {
+      const response = await fetch(`http://localhost:5000/exercises/${id}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) {
+        throw new Error('Failed to delete exercise');
+      }
+      setExercises(exercises.filter(ex => ex.id !== id));
+    } catch (error) {
+      console.error('Error deleting exercise:', error);
+      alert('Failed to delete exercise. Please try again.');
+    }
   };
 
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
     const reader = new FileReader();
-    reader.onload = (evt) => {
+    reader.onload = async (evt) => {
       const bstr = evt.target.result;
       const wb = XLSX.read(bstr, { type: 'binary' });
       const wsname = wb.SheetNames[0];
       const ws = wb.Sheets[wsname];
       const data = XLSX.utils.sheet_to_json(ws);
       const formattedData = data.map(item => ({
-        id: Date.now().toString(),
         pregunta: item.pregunta,
         keywords: item.keywords ? item.keywords.split(',').map(k => k.trim()) : [],
         acceptableAnswers: item.acceptableAnswers ? item.acceptableAnswers.split(',').map(a => a.trim()) : [],
@@ -101,9 +151,15 @@ function AdminPage() {
         category: item.category || '',
         hint: item.hint || ''
       }));
-      const updatedExercises = [...exercises, ...formattedData];
-      setExercises(updatedExercises);
-      localStorage.setItem('exercises', JSON.stringify(updatedExercises));
+      
+      for (const exercise of formattedData) {
+        try {
+          await addExerciseToAPI(exercise);
+        } catch (error) {
+          console.error('Error adding exercise from file:', error);
+        }
+      }
+      fetchExercises();
     };
     reader.readAsBinaryString(file);
   };
