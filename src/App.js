@@ -8,13 +8,22 @@ function App() {
   return (
     <Router>
       <div className="App">
-        <nav style={{ position: 'absolute', top: '10px', right: '10px' }}>
-          <Link to="/admin">Admin</Link>
-        </nav>
-        <Routes>
-          <Route path="/" element={<EjerciciosEspanol />} />
-          <Route path="/admin" element={<AdminPage />} />
-        </Routes>
+        <header className="App-header">
+          <h1 className="fancy-title">Ejercicios de Español de Alejandra</h1>
+          <nav className="nav-menu">
+            <Link to="/" className="nav-link">Inicio</Link>
+            <Link to="/admin" className="nav-link">Admin</Link>
+          </nav>
+        </header>
+        <main className="App-main">
+          <Routes>
+            <Route path="/" element={<EjerciciosEspanol />} />
+            <Route path="/admin" element={<AdminPage />} />
+          </Routes>
+        </main>
+        <footer className="App-footer">
+          <p>© 2023 Ejercicios de Español de Alejandra. Todos los derechos reservados.</p>
+        </footer>
       </div>
     </Router>
   );

@@ -2,33 +2,16 @@ import React, { useState, useEffect } from 'react';
 import './EjerciciosEspanol.css';
 import ejerciciosData from '../data/ejercicios.json';
 
-// Levenshtein distance function for approximate string matching
-function levenshteinDistance(a, b) {
-  const matrix = [];
+// Function to normalize text (remove extra spaces, lowercase, and sort words)
+function normalizeText(text) {
+  return text.toLowerCase().trim().split(/\s+/).sort().join(' ');
+}
 
-  for (let i = 0; i <= b.length; i++) {
-    matrix[i] = [i];
-  }
-
-  for (let j = 0; j <= a.length; j++) {
-    matrix[0][j] = j;
-  }
-
-  for (let i = 1; i <= b.length; i++) {
-    for (let j = 1; j <= a.length; j++) {
-      if (b.charAt(i - 1) === a.charAt(j - 1)) {
-        matrix[i][j] = matrix[i - 1][j - 1];
-      } else {
-        matrix[i][j] = Math.min(
-          matrix[i - 1][j - 1] + 1,
-          matrix[i][j - 1] + 1,
-          matrix[i - 1][j] + 1
-        );
-      }
-    }
-  }
-
-  return matrix[b.length][a.length];
+// Function to check if two answers are approximately equal
+function areAnswersEqual(answer1, answer2) {
+  const normalized1 = normalizeText(answer1);
+  const normalized2 = normalizeText(answer2);
+  return normalized1 === normalized2;
 }
 
 const EjerciciosEspanol = () => {
@@ -42,6 +25,7 @@ const EjerciciosEspanol = () => {
   const [respuestasIncorrectas, setRespuestasIncorrectas] = useState(0);
   const [ejerciciosSaltados, setEjerciciosSaltados] = useState(0);
   const [mostrarPista, setMostrarPista] = useState(false);
+  const [animateQuestion, setAnimateQuestion] = useState(false);
 
   useEffect(() => {
     setRespuestaUsuario('');
@@ -49,6 +33,8 @@ const EjerciciosEspanol = () => {
     setIntentos(0);
     setMostrarRespuestaCorrecta(false);
     setMostrarPista(false);
+    setAnimateQuestion(true);
+    setTimeout(() => setAnimateQuestion(false), 500);
   }, [ejercicioActual]);
 
   const verificarRespuesta = () => {
@@ -57,19 +43,11 @@ const EjerciciosEspanol = () => {
       return;
     }
 
-    const respuestaCorrecta = ejercicios[ejercicioActual].respuesta.toLowerCase();
-    const respuestaUsuarioLower = respuestaUsuario.toLowerCase();
+    const respuestaCorrecta = ejercicios[ejercicioActual].respuesta;
+    const esCorrecta = areAnswersEqual(respuestaUsuario, respuestaCorrecta);
 
-    // Check for exact match or permutation
-    const esCorrecta = respuestaCorrecta === respuestaUsuarioLower ||
-      respuestaCorrecta.split(' ').sort().join(' ') === respuestaUsuarioLower.split(' ').sort().join(' ');
-
-    // Check for approximate match
-    const distancia = levenshteinDistance(respuestaCorrecta, respuestaUsuarioLower);
-    const esAproximada = distancia <= 2;
-
-    if (esCorrecta || esAproximada) {
-      setFeedback(esCorrecta ? '¡Correcto! Muy bien.' : '¡Casi! Tu respuesta es muy cercana a la correcta.');
+    if (esCorrecta) {
+      setFeedback('¡Correcto! Muy bien.');
       setMostrarRespuestaCorrecta(true);
       setRespuestasCorrectas(respuestasCorrectas + 1);
     } else {
@@ -112,18 +90,26 @@ const EjerciciosEspanol = () => {
     setMostrarPista(true);
   };
 
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      verificarRespuesta();
+    }
+  };
+
   const progreso = ((ejercicioActual + 1) / ejercicios.length) * 100;
 
   return (
     <div className="ejercicios-espanol">
       <h1>Ejercicios de Español</h1>
       <p className="nivel">Nivel: Principiante</p>
-      <div className="ejercicio">
+      <div className={`ejercicio ${animateQuestion ? 'animate-question' : ''}`}>
         <p className="pregunta">{ejercicios[ejercicioActual].pregunta}</p>
         <input
           type="text"
           value={respuestaUsuario}
           onChange={(e) => setRespuestaUsuario(e.target.value)}
+          onKeyPress={handleKeyPress}
           placeholder="Tu respuesta"
         />
         <div className="botones-respuesta">
@@ -135,7 +121,7 @@ const EjerciciosEspanol = () => {
           </button>
         </div>
         {feedback && (
-          <p className={`feedback ${feedback.includes('Correcto') || feedback.includes('Casi') ? 'correcto' : 'incorrecto'}`}>
+          <p className={`feedback ${feedback.includes('Correcto') ? 'correcto' : 'incorrecto'}`}>
             {feedback}
           </p>
         )}
