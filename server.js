@@ -10,12 +10,15 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:4000",
-    methods: ["GET", "POST"]
+    origin: ["http://localhost:4000", "http://localhost:3000"],
+    methods: ["GET", "POST", "PUT", "DELETE"]
   }
 });
 
-app.use(cors());
+app.use(cors({
+  origin: ["http://localhost:4000", "http://localhost:3000"],
+  methods: ["GET", "POST", "PUT", "DELETE"]
+}));
 app.use(express.json());
 
 const connectionString = process.env.NEON_DB_CONNECTION_STRING;
@@ -46,24 +49,62 @@ app.get('/exercises', async (req, res) => {
     res.json(result.rows);
   } catch (error) {
     console.error('Error fetching exercises:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', details: error.message });
   }
 });
 
 // Add a new exercise
 app.post('/exercises', async (req, res) => {
-  const { question, answer } = req.body;
+  const { pregunta, keywords, acceptableAnswers, difficulty, category, hint } = req.body;
   try {
     const result = await pool.query(
-      'INSERT INTO exercises (question, answer) VALUES ($1, $2) RETURNING *',
-      [question, answer]
+      'INSERT INTO exercises (question, keywords, acceptable_answers, difficulty, category, hint) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+      [pregunta, keywords, acceptableAnswers, difficulty, category, hint]
     );
     const newExercise = result.rows[0];
     res.status(201).json(newExercise);
     io.emit('exercise_added', newExercise);
   } catch (error) {
     console.error('Error adding exercise:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', details: error.message });
+  }
+});
+
+// Update an exercise
+app.put('/exercises/:id', async (req, res) => {
+  const { id } = req.params;
+  const { pregunta, keywords, acceptableAnswers, difficulty, category, hint } = req.body;
+  try {
+    const result = await pool.query(
+      'UPDATE exercises SET question = $1, keywords = $2, acceptable_answers = $3, difficulty = $4, category = $5, hint = $6 WHERE id = $7 RETURNING *',
+      [pregunta, keywords, acceptableAnswers, difficulty, category, hint, id]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Exercise not found' });
+    }
+    const updatedExercise = result.rows[0];
+    res.json(updatedExercise);
+    io.emit('exercise_updated', updatedExercise);
+  } catch (error) {
+    console.error('Error updating exercise:', error);
+    res.status(500).json({ error: 'Internal server error', details: error.message });
+  }
+});
+
+// Delete an exercise
+app.delete('/exercises/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await pool.query('DELETE FROM exercises WHERE id = $1 RETURNING *', [id]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Exercise not found' });
+    }
+    const deletedExercise = result.rows[0];
+    res.json(deletedExercise);
+    io.emit('exercise_deleted', id);
+  } catch (error) {
+    console.error('Error deleting exercise:', error);
+    res.status(500).json({ error: 'Internal server error', details: error.message });
   }
 });
 

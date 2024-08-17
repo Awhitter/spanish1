@@ -16,26 +16,47 @@ function AdminPage() {
     category: '',
     hint: ''
   });
+  const [errorMessage, setErrorMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
 
   useEffect(() => {
     fetchExercises();
 
     socket.on('exercise_added', (newExercise) => {
       setExercises(prevExercises => [...prevExercises, newExercise]);
+      setSuccessMessage('New exercise added successfully!');
+    });
+
+    socket.on('exercise_updated', (updatedExercise) => {
+      setExercises(prevExercises => 
+        prevExercises.map(ex => ex.id === updatedExercise.id ? updatedExercise : ex)
+      );
+      setSuccessMessage('Exercise updated successfully!');
+    });
+
+    socket.on('exercise_deleted', (deletedId) => {
+      setExercises(prevExercises => prevExercises.filter(ex => ex.id !== deletedId));
+      setSuccessMessage('Exercise deleted successfully!');
     });
 
     return () => {
       socket.off('exercise_added');
+      socket.off('exercise_updated');
+      socket.off('exercise_deleted');
     };
   }, []);
 
   const fetchExercises = async () => {
     try {
       const response = await fetch('http://localhost:5000/exercises');
+      if (!response.ok) {
+        throw new Error('Failed to fetch exercises');
+      }
       const data = await response.json();
       setExercises(data);
     } catch (error) {
       console.error('Error fetching exercises:', error);
+      setErrorMessage('Failed to fetch exercises. Please try again.');
     }
   };
 
@@ -54,33 +75,27 @@ function AdminPage() {
   };
 
   const addExerciseToAPI = async (exercise) => {
-    try {
-      const response = await fetch('http://localhost:5000/exercises', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(exercise),
-      });
-      if (!response.ok) {
-        throw new Error('Failed to add exercise');
-      }
-      const data = await response.json();
-      return data;
-    } catch (error) {
-      console.error('Error adding exercise:', error);
-      throw error;
+    const response = await fetch('http://localhost:5000/exercises', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(exercise),
+    });
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to add exercise');
     }
+    return await response.json();
   };
 
   const handleAddExercise = async () => {
     if (newExercise.pregunta.trim() === '' || newExercise.acceptableAnswers.length === 0) {
-      alert('Please enter both question and at least one acceptable answer.');
+      setErrorMessage('Please enter both question and at least one acceptable answer.');
       return;
     }
     try {
-      const addedExercise = await addExerciseToAPI(newExercise);
-      setExercises([...exercises, addedExercise]);
+      await addExerciseToAPI(newExercise);
       setNewExercise({
         pregunta: '',
         keywords: [],
@@ -89,8 +104,11 @@ function AdminPage() {
         category: '',
         hint: ''
       });
+      setSuccessMessage('Exercise added successfully!');
+      setErrorMessage('');
     } catch (error) {
-      alert('Failed to add exercise. Please try again.');
+      console.error('Error adding exercise:', error);
+      setErrorMessage(`Failed to add exercise: ${error.message}`);
     }
   };
 
@@ -108,14 +126,17 @@ function AdminPage() {
         body: JSON.stringify(editingExercise),
       });
       if (!response.ok) {
-        throw new Error('Failed to update exercise');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to update exercise');
       }
       const updatedExercise = await response.json();
       setExercises(exercises.map(ex => ex.id === updatedExercise.id ? updatedExercise : ex));
       setEditingExercise(null);
+      setSuccessMessage('Exercise updated successfully!');
+      setErrorMessage('');
     } catch (error) {
       console.error('Error updating exercise:', error);
-      alert('Failed to update exercise. Please try again.');
+      setErrorMessage(`Failed to update exercise: ${error.message}`);
     }
   };
 
@@ -125,12 +146,15 @@ function AdminPage() {
         method: 'DELETE',
       });
       if (!response.ok) {
-        throw new Error('Failed to delete exercise');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to delete exercise');
       }
       setExercises(exercises.filter(ex => ex.id !== id));
+      setSuccessMessage('Exercise deleted successfully!');
+      setErrorMessage('');
     } catch (error) {
       console.error('Error deleting exercise:', error);
-      alert('Failed to delete exercise. Please try again.');
+      setErrorMessage(`Failed to delete exercise: ${error.message}`);
     }
   };
 
@@ -152,14 +176,22 @@ function AdminPage() {
         hint: item.hint || ''
       }));
       
+      let addedCount = 0;
+      let errorCount = 0;
       for (const exercise of formattedData) {
         try {
           await addExerciseToAPI(exercise);
+          addedCount++;
         } catch (error) {
           console.error('Error adding exercise from file:', error);
+          errorCount++;
         }
       }
       fetchExercises();
+      setSuccessMessage(`Added ${addedCount} exercises successfully.`);
+      if (errorCount > 0) {
+        setErrorMessage(`Failed to add ${errorCount} exercises. Check console for details.`);
+      }
     };
     reader.readAsBinaryString(file);
   };
@@ -167,6 +199,8 @@ function AdminPage() {
   return (
     <div className="admin-page">
       <h2>Admin Page</h2>
+      {errorMessage && <div className="error-message">{errorMessage}</div>}
+      {successMessage && <div className="success-message">{successMessage}</div>}
       <h3>Add New Exercise</h3>
       <input
         type="text"
