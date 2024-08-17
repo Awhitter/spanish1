@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import * as XLSX from 'xlsx';
 import './AdminPage.css';
-import io from 'socket.io-client';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000';
-const socket = io(BACKEND_URL);
 
 function AdminPage() {
   const [exercises, setExercises] = useState([]);
@@ -19,32 +17,10 @@ function AdminPage() {
   });
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const [isOffline, setIsOffline] = useState(false);
 
   useEffect(() => {
     fetchExercises();
-
-    socket.on('exercise_added', (newExercise) => {
-      setExercises(prevExercises => [...prevExercises, newExercise]);
-      setSuccessMessage('New exercise added successfully!');
-    });
-
-    socket.on('exercise_updated', (updatedExercise) => {
-      setExercises(prevExercises => 
-        prevExercises.map(ex => ex.id === updatedExercise.id ? updatedExercise : ex)
-      );
-      setSuccessMessage('Exercise updated successfully!');
-    });
-
-    socket.on('exercise_deleted', (deletedId) => {
-      setExercises(prevExercises => prevExercises.filter(ex => ex.id !== deletedId));
-      setSuccessMessage('Exercise deleted successfully!');
-    });
-
-    return () => {
-      socket.off('exercise_added');
-      socket.off('exercise_updated');
-      socket.off('exercise_deleted');
-    };
   }, []);
 
   const fetchExercises = async () => {
@@ -55,9 +31,14 @@ function AdminPage() {
       }
       const data = await response.json();
       setExercises(data);
+      localStorage.setItem('exercises', JSON.stringify(data));
+      setIsOffline(false);
     } catch (error) {
       console.error('Error fetching exercises:', error);
-      setErrorMessage('Failed to fetch exercises. Please try again.');
+      const storedExercises = JSON.parse(localStorage.getItem('exercises') || '[]');
+      setExercises(storedExercises);
+      setIsOffline(true);
+      setErrorMessage('Failed to fetch exercises from server. Showing locally stored exercises.');
     }
   };
 
@@ -76,18 +57,27 @@ function AdminPage() {
   };
 
   const addExerciseToAPI = async (exercise) => {
-    const response = await fetch(`${BACKEND_URL}/exercises`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(exercise),
-    });
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Failed to add exercise');
+    if (isOffline) {
+      const newId = exercises.length > 0 ? Math.max(...exercises.map(e => e.id)) + 1 : 1;
+      const newExerciseWithId = { ...exercise, id: newId };
+      const updatedExercises = [...exercises, newExerciseWithId];
+      setExercises(updatedExercises);
+      localStorage.setItem('exercises', JSON.stringify(updatedExercises));
+      return newExerciseWithId;
+    } else {
+      const response = await fetch(`${BACKEND_URL}/exercises`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(exercise),
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to add exercise');
+      }
+      return await response.json();
     }
-    return await response.json();
   };
 
   const handleAddExercise = async () => {
@@ -96,7 +86,8 @@ function AdminPage() {
       return;
     }
     try {
-      await addExerciseToAPI(newExercise);
+      const addedExercise = await addExerciseToAPI(newExercise);
+      setExercises([...exercises, addedExercise]);
       setNewExercise({
         pregunta: '',
         keywords: [],
@@ -119,19 +110,27 @@ function AdminPage() {
 
   const handleUpdateExercise = async () => {
     try {
-      const response = await fetch(`${BACKEND_URL}/exercises/${editingExercise.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(editingExercise),
-      });
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to update exercise');
+      if (isOffline) {
+        const updatedExercises = exercises.map(ex => 
+          ex.id === editingExercise.id ? editingExercise : ex
+        );
+        setExercises(updatedExercises);
+        localStorage.setItem('exercises', JSON.stringify(updatedExercises));
+      } else {
+        const response = await fetch(`${BACKEND_URL}/exercises/${editingExercise.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(editingExercise),
+        });
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to update exercise');
+        }
+        const updatedExercise = await response.json();
+        setExercises(exercises.map(ex => ex.id === updatedExercise.id ? updatedExercise : ex));
       }
-      const updatedExercise = await response.json();
-      setExercises(exercises.map(ex => ex.id === updatedExercise.id ? updatedExercise : ex));
       setEditingExercise(null);
       setSuccessMessage('Exercise updated successfully!');
       setErrorMessage('');
@@ -143,14 +142,20 @@ function AdminPage() {
 
   const handleDeleteExercise = async (id) => {
     try {
-      const response = await fetch(`${BACKEND_URL}/exercises/${id}`, {
-        method: 'DELETE',
-      });
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to delete exercise');
+      if (isOffline) {
+        const updatedExercises = exercises.filter(ex => ex.id !== id);
+        setExercises(updatedExercises);
+        localStorage.setItem('exercises', JSON.stringify(updatedExercises));
+      } else {
+        const response = await fetch(`${BACKEND_URL}/exercises/${id}`, {
+          method: 'DELETE',
+        });
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to delete exercise');
+        }
+        setExercises(exercises.filter(ex => ex.id !== id));
       }
-      setExercises(exercises.filter(ex => ex.id !== id));
       setSuccessMessage('Exercise deleted successfully!');
       setErrorMessage('');
     } catch (error) {
@@ -200,6 +205,7 @@ function AdminPage() {
   return (
     <div className="admin-page">
       <h2>Admin Page</h2>
+      {isOffline && <div className="warning-message">Working in offline mode. Changes will be saved locally.</div>}
       {errorMessage && <div className="error-message">{errorMessage}</div>}
       {successMessage && <div className="success-message">{successMessage}</div>}
       <h3>Add New Exercise</h3>
