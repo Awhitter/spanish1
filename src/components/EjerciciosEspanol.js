@@ -1,7 +1,6 @@
-import React, { useState, useEffect, useCallback, memo } from 'react';
+import React, { useEffect, useCallback, memo } from 'react';
 import io from 'socket.io-client';
 import './EjerciciosEspanol.css';
-import { isAnswerCorrect } from '../utils/textUtils';
 import useExerciseManagement from '../hooks/useExerciseManagement';
 
 const socket = io('http://localhost:5000');
