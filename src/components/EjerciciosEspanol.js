@@ -9,6 +9,7 @@ function EjerciciosEspanol() {
   const [userAnswer, setUserAnswer] = useState('');
   const [feedback, setFeedback] = useState('');
   const [stats, setStats] = useState({ correct: 0, incorrect: 0, skipped: 0 });
+  const [showHint, setShowHint] = useState(false);
 
   useEffect(() => {
     fetchExercises();
@@ -32,11 +33,11 @@ function EjerciciosEspanol() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (currentExercise.acceptableAnswers.includes(userAnswer.toLowerCase().trim())) {
+    if (currentExercise.acceptable_answers.includes(userAnswer.toLowerCase().trim())) {
       setFeedback('¡Correcto!');
       setStats(prev => ({ ...prev, correct: prev.correct + 1 }));
     } else {
-      setFeedback(`Incorrecto. La respuesta correcta es: ${currentExercise.acceptableAnswers.join(' o ')}`);
+      setFeedback(`Incorrecto. La respuesta correcta es: ${currentExercise.acceptable_answers.join(' o ')}`);
       setStats(prev => ({ ...prev, incorrect: prev.incorrect + 1 }));
     }
   };
@@ -51,6 +52,11 @@ function EjerciciosEspanol() {
     setCurrentExercise(nextExercise);
     setUserAnswer('');
     setFeedback('');
+    setShowHint(false);
+  };
+
+  const handleShowHint = () => {
+    setShowHint(true);
   };
 
   if (!currentExercise) {
@@ -72,7 +78,8 @@ function EjerciciosEspanol() {
           />
           <button type="submit">Verificar</button>
         </form>
-        <button onClick={handleSkip}>Pista</button>
+        <button onClick={handleShowHint} disabled={showHint}>Pista</button>
+        {showHint && <p className="hint">{currentExercise.hint}</p>}
         <button onClick={nextExercise}>Reiniciar</button>
         <button onClick={handleSkip}>Saltar</button>
         {feedback && <p className="feedback">{feedback}</p>}

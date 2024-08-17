@@ -17,7 +17,6 @@ function AdminPage() {
   });
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
-  const [isOffline, setIsOffline] = useState(false);
 
   useEffect(() => {
     fetchExercises();
@@ -31,14 +30,9 @@ function AdminPage() {
       }
       const data = await response.json();
       setExercises(data);
-      localStorage.setItem('exercises', JSON.stringify(data));
-      setIsOffline(false);
     } catch (error) {
       console.error('Error fetching exercises:', error);
-      const storedExercises = JSON.parse(localStorage.getItem('exercises') || '[]');
-      setExercises(storedExercises);
-      setIsOffline(true);
-      setErrorMessage('Failed to fetch exercises from server. Showing locally stored exercises.');
+      setErrorMessage('Failed to fetch exercises. Please try again.');
     }
   };
 
@@ -57,27 +51,18 @@ function AdminPage() {
   };
 
   const addExerciseToAPI = async (exercise) => {
-    if (isOffline) {
-      const newId = exercises.length > 0 ? Math.max(...exercises.map(e => e.id)) + 1 : 1;
-      const newExerciseWithId = { ...exercise, id: newId };
-      const updatedExercises = [...exercises, newExerciseWithId];
-      setExercises(updatedExercises);
-      localStorage.setItem('exercises', JSON.stringify(updatedExercises));
-      return newExerciseWithId;
-    } else {
-      const response = await fetch(`${BACKEND_URL}/exercises`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(exercise),
-      });
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to add exercise');
-      }
-      return await response.json();
+    const response = await fetch(`${BACKEND_URL}/exercises`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(exercise),
+    });
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to add exercise');
     }
+    return await response.json();
   };
 
   const handleAddExercise = async () => {
@@ -110,27 +95,19 @@ function AdminPage() {
 
   const handleUpdateExercise = async () => {
     try {
-      if (isOffline) {
-        const updatedExercises = exercises.map(ex => 
-          ex.id === editingExercise.id ? editingExercise : ex
-        );
-        setExercises(updatedExercises);
-        localStorage.setItem('exercises', JSON.stringify(updatedExercises));
-      } else {
-        const response = await fetch(`${BACKEND_URL}/exercises/${editingExercise.id}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(editingExercise),
-        });
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || 'Failed to update exercise');
-        }
-        const updatedExercise = await response.json();
-        setExercises(exercises.map(ex => ex.id === updatedExercise.id ? updatedExercise : ex));
+      const response = await fetch(`${BACKEND_URL}/exercises/${editingExercise.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(editingExercise),
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to update exercise');
       }
+      const updatedExercise = await response.json();
+      setExercises(exercises.map(ex => ex.id === updatedExercise.id ? updatedExercise : ex));
       setEditingExercise(null);
       setSuccessMessage('Exercise updated successfully!');
       setErrorMessage('');
@@ -142,20 +119,14 @@ function AdminPage() {
 
   const handleDeleteExercise = async (id) => {
     try {
-      if (isOffline) {
-        const updatedExercises = exercises.filter(ex => ex.id !== id);
-        setExercises(updatedExercises);
-        localStorage.setItem('exercises', JSON.stringify(updatedExercises));
-      } else {
-        const response = await fetch(`${BACKEND_URL}/exercises/${id}`, {
-          method: 'DELETE',
-        });
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || 'Failed to delete exercise');
-        }
-        setExercises(exercises.filter(ex => ex.id !== id));
+      const response = await fetch(`${BACKEND_URL}/exercises/${id}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to delete exercise');
       }
+      setExercises(exercises.filter(ex => ex.id !== id));
       setSuccessMessage('Exercise deleted successfully!');
       setErrorMessage('');
     } catch (error) {
@@ -205,48 +176,60 @@ function AdminPage() {
   return (
     <div className="admin-page">
       <h2>Admin Page</h2>
-      {isOffline && <div className="warning-message">Working in offline mode. Changes will be saved locally.</div>}
       {errorMessage && <div className="error-message">{errorMessage}</div>}
       {successMessage && <div className="success-message">{successMessage}</div>}
       <h3>Add New Exercise</h3>
-      <input
-        type="text"
-        placeholder="Question"
-        value={newExercise.pregunta}
-        onChange={(e) => handleInputChange(e, 'pregunta')}
-      />
-      <input
-        type="text"
-        placeholder="Keywords (comma-separated)"
-        value={newExercise.keywords.join(', ')}
-        onChange={(e) => handleInputChange(e, 'keywords')}
-      />
-      <input
-        type="text"
-        placeholder="Acceptable Answers (comma-separated)"
-        value={newExercise.acceptableAnswers.join(', ')}
-        onChange={(e) => handleInputChange(e, 'acceptableAnswers')}
-      />
-      <select
-        value={newExercise.difficulty}
-        onChange={(e) => handleInputChange(e, 'difficulty')}
-      >
-        <option value="easy">Easy</option>
-        <option value="medium">Medium</option>
-        <option value="hard">Hard</option>
-      </select>
-      <input
-        type="text"
-        placeholder="Category"
-        value={newExercise.category}
-        onChange={(e) => handleInputChange(e, 'category')}
-      />
-      <input
-        type="text"
-        placeholder="Hint"
-        value={newExercise.hint}
-        onChange={(e) => handleInputChange(e, 'hint')}
-      />
+      <div className="form-group">
+        <label>Question:</label>
+        <input
+          type="text"
+          value={newExercise.pregunta}
+          onChange={(e) => handleInputChange(e, 'pregunta')}
+        />
+      </div>
+      <div className="form-group">
+        <label>Keywords (comma-separated):</label>
+        <input
+          type="text"
+          value={newExercise.keywords.join(', ')}
+          onChange={(e) => handleInputChange(e, 'keywords')}
+        />
+      </div>
+      <div className="form-group">
+        <label>Acceptable Answers (comma-separated):</label>
+        <input
+          type="text"
+          value={newExercise.acceptableAnswers.join(', ')}
+          onChange={(e) => handleInputChange(e, 'acceptableAnswers')}
+        />
+      </div>
+      <div className="form-group">
+        <label>Difficulty:</label>
+        <select
+          value={newExercise.difficulty}
+          onChange={(e) => handleInputChange(e, 'difficulty')}
+        >
+          <option value="easy">Easy</option>
+          <option value="medium">Medium</option>
+          <option value="hard">Hard</option>
+        </select>
+      </div>
+      <div className="form-group">
+        <label>Category:</label>
+        <input
+          type="text"
+          value={newExercise.category}
+          onChange={(e) => handleInputChange(e, 'category')}
+        />
+      </div>
+      <div className="form-group">
+        <label>Hint:</label>
+        <input
+          type="text"
+          value={newExercise.hint}
+          onChange={(e) => handleInputChange(e, 'hint')}
+        />
+      </div>
       <button onClick={handleAddExercise}>Add Exercise</button>
 
       <h3>Upload Excel File</h3>
@@ -258,39 +241,63 @@ function AdminPage() {
           <li key={exercise.id}>
             {editingExercise && editingExercise.id === exercise.id ? (
               <>
-                <input
-                  value={editingExercise.pregunta}
-                  onChange={(e) => setEditingExercise({...editingExercise, pregunta: e.target.value})}
-                />
-                <input
-                  value={editingExercise.keywords ? editingExercise.keywords.join(', ') : ''}
-                  onChange={(e) => setEditingExercise({...editingExercise, keywords: e.target.value.split(',').map(k => k.trim())})}
-                />
-                <input
-                  value={editingExercise.acceptableAnswers ? editingExercise.acceptableAnswers.join(', ') : ''}
-                  onChange={(e) => setEditingExercise({...editingExercise, acceptableAnswers: e.target.value.split(',').map(a => a.trim())})}
-                />
-                <select
-                  value={editingExercise.difficulty}
-                  onChange={(e) => setEditingExercise({...editingExercise, difficulty: e.target.value})}
-                >
-                  <option value="easy">Easy</option>
-                  <option value="medium">Medium</option>
-                  <option value="hard">Hard</option>
-                </select>
-                <input
-                  value={editingExercise.category}
-                  onChange={(e) => setEditingExercise({...editingExercise, category: e.target.value})}
-                />
-                <input
-                  value={editingExercise.hint}
-                  onChange={(e) => setEditingExercise({...editingExercise, hint: e.target.value})}
-                />
+                <div className="form-group">
+                  <label>Question:</label>
+                  <input
+                    value={editingExercise.pregunta}
+                    onChange={(e) => setEditingExercise({...editingExercise, pregunta: e.target.value})}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Keywords:</label>
+                  <input
+                    value={editingExercise.keywords ? editingExercise.keywords.join(', ') : ''}
+                    onChange={(e) => setEditingExercise({...editingExercise, keywords: e.target.value.split(',').map(k => k.trim())})}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Acceptable Answers:</label>
+                  <input
+                    value={editingExercise.acceptable_answers ? editingExercise.acceptable_answers.join(', ') : ''}
+                    onChange={(e) => setEditingExercise({...editingExercise, acceptable_answers: e.target.value.split(',').map(a => a.trim())})}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Difficulty:</label>
+                  <select
+                    value={editingExercise.difficulty}
+                    onChange={(e) => setEditingExercise({...editingExercise, difficulty: e.target.value})}
+                  >
+                    <option value="easy">Easy</option>
+                    <option value="medium">Medium</option>
+                    <option value="hard">Hard</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label>Category:</label>
+                  <input
+                    value={editingExercise.category}
+                    onChange={(e) => setEditingExercise({...editingExercise, category: e.target.value})}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Hint:</label>
+                  <input
+                    value={editingExercise.hint}
+                    onChange={(e) => setEditingExercise({...editingExercise, hint: e.target.value})}
+                  />
+                </div>
                 <button onClick={handleUpdateExercise}>Update</button>
               </>
             ) : (
               <>
-                <span>{exercise.pregunta} - {exercise.acceptableAnswers ? exercise.acceptableAnswers.join(', ') : ''} - {exercise.difficulty} - {exercise.category} - Hint: {exercise.hint}</span>
+                <span>
+                  <strong>Question:</strong> {exercise.pregunta}<br />
+                  <strong>Acceptable Answers:</strong> {exercise.acceptable_answers ? exercise.acceptable_answers.join(', ') : ''}<br />
+                  <strong>Difficulty:</strong> {exercise.difficulty}<br />
+                  <strong>Category:</strong> {exercise.category}<br />
+                  <strong>Hint:</strong> {exercise.hint}
+                </span>
                 <button onClick={() => handleEditExercise(exercise)}>Edit</button>
                 <button onClick={() => handleDeleteExercise(exercise.id)}>Delete</button>
               </>
