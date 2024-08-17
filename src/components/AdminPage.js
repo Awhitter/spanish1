@@ -263,11 +263,11 @@ function AdminPage() {
                   onChange={(e) => setEditingExercise({...editingExercise, pregunta: e.target.value})}
                 />
                 <input
-                  value={editingExercise.keywords.join(', ')}
+                  value={editingExercise.keywords ? editingExercise.keywords.join(', ') : ''}
                   onChange={(e) => setEditingExercise({...editingExercise, keywords: e.target.value.split(',').map(k => k.trim())})}
                 />
                 <input
-                  value={editingExercise.acceptableAnswers.join(', ')}
+                  value={editingExercise.acceptableAnswers ? editingExercise.acceptableAnswers.join(', ') : ''}
                   onChange={(e) => setEditingExercise({...editingExercise, acceptableAnswers: e.target.value.split(',').map(a => a.trim())})}
                 />
                 <select
@@ -290,7 +290,7 @@ function AdminPage() {
               </>
             ) : (
               <>
-                <span>{exercise.pregunta} - {exercise.acceptableAnswers.join(', ')} - {exercise.difficulty} - {exercise.category} - Hint: {exercise.hint}</span>
+                <span>{exercise.pregunta} - {exercise.acceptableAnswers ? exercise.acceptableAnswers.join(', ') : ''} - {exercise.difficulty} - {exercise.category} - Hint: {exercise.hint}</span>
                 <button onClick={() => handleEditExercise(exercise)}>Edit</button>
                 <button onClick={() => handleDeleteExercise(exercise.id)}>Delete</button>
               </>

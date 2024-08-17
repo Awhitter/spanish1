@@ -1,135 +1,90 @@
-import React, { useEffect, useCallback, memo } from 'react';
-import io from 'socket.io-client';
+import React, { useState, useEffect } from 'react';
 import './EjerciciosEspanol.css';
-import useExerciseManagement from '../hooks/useExerciseManagement';
 
-const socket = io('http://localhost:5000');
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000';
 
-// Define missing components
-const InputField = memo(({ value, onChange, onKeyPress, placeholder }) => (
-  <input
-    type="text"
-    value={value}
-    onChange={onChange}
-    onKeyPress={onKeyPress}
-    placeholder={placeholder}
-    className="input-field"
-  />
-));
-
-const ActionButtons = memo(({
-  onVerify,
-  onHint,
-  onReset,
-  onSkip,
-  onNext,
-  showHint,
-  showNextButton,
-  isLastExercise
-}) => (
-  <div className="action-buttons">
-    <button onClick={onVerify}>Verificar</button>
-    <button onClick={onHint} disabled={showHint}>Pista</button>
-    <button onClick={onReset}>Reiniciar</button>
-    <button onClick={onSkip}>Saltar</button>
-    {showNextButton && !isLastExercise && <button onClick={onNext}>Siguiente</button>}
-  </div>
-));
-
-const FeedbackMessage = memo(({ feedback }) => (
-  <p className="feedback">{feedback}</p>
-));
-
-const ProgressBar = memo(({ progress }) => (
-  <div className="progress-bar">
-    <div className="progress" style={{ width: `${progress}%` }}></div>
-  </div>
-));
-
-const Statistics = memo(({ correct, incorrect, skipped }) => (
-  <div className="statistics">
-    <p>Correctas: {correct}</p>
-    <p>Incorrectas: {incorrect}</p>
-    <p>Saltadas: {skipped}</p>
-  </div>
-));
-
-const EjerciciosEspanol = () => {
-  const {
-    ejercicio,
-    respuestaUsuario,
-    feedback,
-    mostrarRespuestaCorrecta,
-    mostrarPista,
-    animateQuestion,
-    estadisticas,
-    progreso,
-    handleInputChange,
-    verificarRespuesta,
-    mostrarPistaHandler,
-    siguienteEjercicio,
-    saltarEjercicio,
-    reiniciarEjercicio,
-    fetchExercises,
-  } = useExerciseManagement();
+function EjerciciosEspanol() {
+  const [exercises, setExercises] = useState([]);
+  const [currentExercise, setCurrentExercise] = useState(null);
+  const [userAnswer, setUserAnswer] = useState('');
+  const [feedback, setFeedback] = useState('');
+  const [stats, setStats] = useState({ correct: 0, incorrect: 0, skipped: 0 });
 
   useEffect(() => {
     fetchExercises();
+  }, []);
 
-    socket.on('exercise_added', (newExercise) => {
-      console.log('New exercise added:', newExercise);
-      fetchExercises(); // Refresh exercises when a new one is added
-    });
-
-    return () => {
-      socket.off('exercise_added');
-    };
-  }, [fetchExercises]);
-
-  const handleKeyPress = useCallback((e) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      verificarRespuesta();
+  const fetchExercises = async () => {
+    try {
+      const response = await fetch(`${BACKEND_URL}/exercises`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch exercises');
+      }
+      const data = await response.json();
+      setExercises(data);
+      if (data.length > 0) {
+        setCurrentExercise(data[Math.floor(Math.random() * data.length)]);
+      }
+    } catch (error) {
+      console.error('Error fetching exercises:', error);
     }
-  }, [verificarRespuesta]);
+  };
 
-  if (!ejercicio) {
-    return <div>Loading exercises...</div>;
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (currentExercise.acceptableAnswers.includes(userAnswer.toLowerCase().trim())) {
+      setFeedback('¡Correcto!');
+      setStats(prev => ({ ...prev, correct: prev.correct + 1 }));
+    } else {
+      setFeedback(`Incorrecto. La respuesta correcta es: ${currentExercise.acceptableAnswers.join(' o ')}`);
+      setStats(prev => ({ ...prev, incorrect: prev.incorrect + 1 }));
+    }
+  };
+
+  const handleSkip = () => {
+    setStats(prev => ({ ...prev, skipped: prev.skipped + 1 }));
+    nextExercise();
+  };
+
+  const nextExercise = () => {
+    const nextExercise = exercises[Math.floor(Math.random() * exercises.length)];
+    setCurrentExercise(nextExercise);
+    setUserAnswer('');
+    setFeedback('');
+  };
+
+  if (!currentExercise) {
+    return <div>Cargando ejercicios...</div>;
   }
 
   return (
     <div className="ejercicios-espanol">
-      <h1>Ejercicios de Español</h1>
-      <p className="nivel">Nivel: {ejercicio.difficulty}</p>
-      <div className={`ejercicio ${animateQuestion ? 'animate-question' : ''}`}>
-        <p className="pregunta">{ejercicio.pregunta}</p>
-        <InputField
-          value={respuestaUsuario}
-          onChange={handleInputChange}
-          onKeyPress={handleKeyPress}
-          placeholder="Tu respuesta"
-        />
-        <ActionButtons
-          onVerify={verificarRespuesta}
-          onHint={mostrarPistaHandler}
-          onReset={reiniciarEjercicio}
-          onSkip={saltarEjercicio}
-          onNext={siguienteEjercicio}
-          showHint={mostrarPista}
-          showNextButton={mostrarRespuestaCorrecta}
-          isLastExercise={progreso === 100}
-        />
-        {feedback && <FeedbackMessage feedback={feedback} />}
-        <ProgressBar progress={progreso} />
-        <p className="contador">Ejercicio {estadisticas.currentExercise} de {estadisticas.totalExercises}</p>
+      <h2>Ejercicios de Español</h2>
+      <div className="exercise-container">
+        <h3>Nivel: {currentExercise.difficulty}</h3>
+        <p className="question">{currentExercise.pregunta}</p>
+        <form onSubmit={handleSubmit}>
+          <input
+            type="text"
+            value={userAnswer}
+            onChange={(e) => setUserAnswer(e.target.value)}
+            placeholder="Tu respuesta"
+          />
+          <button type="submit">Verificar</button>
+        </form>
+        <button onClick={handleSkip}>Pista</button>
+        <button onClick={nextExercise}>Reiniciar</button>
+        <button onClick={handleSkip}>Saltar</button>
+        {feedback && <p className="feedback">{feedback}</p>}
       </div>
-      <Statistics
-        correct={estadisticas.respuestasCorrectas}
-        incorrect={estadisticas.respuestasIncorrectas}
-        skipped={estadisticas.ejerciciosSaltados}
-      />
+      <div className="stats">
+        <p>Ejercicio {exercises.indexOf(currentExercise) + 1} de {exercises.length}</p>
+        <p>Correctas: {stats.correct}</p>
+        <p>Incorrectas: {stats.incorrect}</p>
+        <p>Saltadas: {stats.skipped}</p>
+      </div>
     </div>
   );
-};
+}
 
 export default EjerciciosEspanol;
