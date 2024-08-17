@@ -66,8 +66,8 @@ app.post('/exercises', async (req, res) => {
   const { pregunta, keywords, acceptableAnswers, difficulty, category, hint } = req.body;
   try {
     const result = await pool.query(
-      'INSERT INTO exercises (question, keywords, acceptable_answers, difficulty, category, hint) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
-      [pregunta, keywords, acceptableAnswers, difficulty, category, hint]
+      'INSERT INTO exercises (question, keywords, acceptable_answers, difficulty, category, hint, answer) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
+      [pregunta, keywords, acceptableAnswers, difficulty, category, hint, acceptableAnswers[0]]
     );
     const newExercise = result.rows[0];
     res.status(201).json(newExercise);
@@ -84,8 +84,8 @@ app.put('/exercises/:id', async (req, res) => {
   const { pregunta, keywords, acceptableAnswers, difficulty, category, hint } = req.body;
   try {
     const result = await pool.query(
-      'UPDATE exercises SET question = $1, keywords = $2, acceptable_answers = $3, difficulty = $4, category = $5, hint = $6 WHERE id = $7 RETURNING *',
-      [pregunta, keywords, acceptableAnswers, difficulty, category, hint, id]
+      'UPDATE exercises SET question = $1, keywords = $2, acceptable_answers = $3, difficulty = $4, category = $5, hint = $6, answer = $7 WHERE id = $8 RETURNING *',
+      [pregunta, keywords, acceptableAnswers, difficulty, category, hint, acceptableAnswers[0], id]
     );
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Exercise not found' });
