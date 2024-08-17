@@ -6,7 +6,54 @@ import useExerciseManagement from '../hooks/useExerciseManagement';
 
 const socket = io('http://localhost:5000');
 
-// ... (keep all the existing components: InputField, FeedbackMessage, ProgressBar, ActionButtons, Statistics)
+// Define missing components
+const InputField = memo(({ value, onChange, onKeyPress, placeholder }) => (
+  <input
+    type="text"
+    value={value}
+    onChange={onChange}
+    onKeyPress={onKeyPress}
+    placeholder={placeholder}
+    className="input-field"
+  />
+));
+
+const ActionButtons = memo(({
+  onVerify,
+  onHint,
+  onReset,
+  onSkip,
+  onNext,
+  showHint,
+  showNextButton,
+  isLastExercise
+}) => (
+  <div className="action-buttons">
+    <button onClick={onVerify}>Verificar</button>
+    <button onClick={onHint} disabled={showHint}>Pista</button>
+    <button onClick={onReset}>Reiniciar</button>
+    <button onClick={onSkip}>Saltar</button>
+    {showNextButton && !isLastExercise && <button onClick={onNext}>Siguiente</button>}
+  </div>
+));
+
+const FeedbackMessage = memo(({ feedback }) => (
+  <p className="feedback">{feedback}</p>
+));
+
+const ProgressBar = memo(({ progress }) => (
+  <div className="progress-bar">
+    <div className="progress" style={{ width: `${progress}%` }}></div>
+  </div>
+));
+
+const Statistics = memo(({ correct, incorrect, skipped }) => (
+  <div className="statistics">
+    <p>Correctas: {correct}</p>
+    <p>Incorrectas: {incorrect}</p>
+    <p>Saltadas: {skipped}</p>
+  </div>
+));
 
 const EjerciciosEspanol = () => {
   const {
