@@ -1,47 +1,65 @@
-# Spanish Exercises Website
+# Spanish Exercises Application
 
-This project is a simple React-based website for practicing Spanish exercises.
+This application provides interactive Spanish exercises with an admin interface for managing the exercises.
 
 ## Getting Started
 
-1. Clone this repository
-2. Navigate to the project directory: `cd spanish-exercises`
-3. Install dependencies: `npm install`
-4. Start the development server: `npm start`
-5. Open [http://10.0.0.101:4000](http://10.0.0.101:4000) to view it in the browser.
+1. Clone the repository
+2. Navigate to the project directory
+3. Install dependencies:
+   ```
+   npm install
+   ```
+4. Start the development server:
+   ```
+   npm start
+   ```
+5. Open your browser and go to `http://localhost:4000`
 
-## Adding New Exercises
+## Testing the Application
 
-You can add new exercises directly through the web interface:
+### 1. Start the development server
 
-1. Scroll to the bottom of the page to find the "Agregar Nuevo Ejercicio" (Add New Exercise) section.
-2. Enter the new question in the "Nueva pregunta" field.
-3. Enter the correct answer in the "Nueva respuesta" field.
-4. Click the "Agregar Ejercicio" button to add the new exercise.
+Run `npm start` in the project directory. The application will be available at `http://localhost:4000`.
 
-The new exercise will be immediately available in the app.
+### 2. Test the AdminPage
 
-## Deploying to Netlify
+1. Navigate to `http://localhost:4000/admin`
+2. Add a new exercise:
+   - Fill in all fields (question, keywords, acceptable answers, difficulty, category, and hint)
+   - Click "Add Exercise"
+3. Edit an existing exercise:
+   - Find an exercise in the list
+   - Click "Edit"
+   - Modify some fields
+   - Click "Update"
+4. Delete an exercise:
+   - Find an exercise in the list
+   - Click "Delete"
+5. Refresh the page to verify persistence of your changes
 
-To deploy this app to Netlify:
+### 3. Test the main exercise page
 
-1. Create a new site on Netlify
-2. Connect your GitHub repository to Netlify
-3. Set the build command to `npm run build`
-4. Set the publish directory to `build`
-5. Click "Deploy site"
+1. Navigate to `http://localhost:4000`
+2. Verify that:
+   - The new exercise you added is present
+   - The exercise you edited shows your changes
+   - The exercise you deleted is no longer there
 
-Netlify will automatically deploy your site whenever you push changes to your GitHub repository.
+### 4. Test the hint system
 
-## Available Scripts
+1. On the main exercise page, go through different exercises
+2. For each exercise:
+   - Click the "Hint" button
+   - Verify that the hint displayed matches the custom hint you set in the AdminPage
 
-In the project directory, you can run:
+If all these steps work as expected, it means the changes have been successfully implemented and the data is persisting correctly.
 
-- `npm start`: Runs the app in development mode on port 4000
-- `npm test`: Launches the test runner
-- `npm run build`: Builds the app for production
-- `npm run eject`: Ejects from Create React App (one-way operation)
+## Troubleshooting
 
-## Learn More
+If you encounter any issues:
+1. Make sure all dependencies are installed (`npm install`)
+2. Clear your browser's local storage and refresh the page
+3. Restart the development server
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+If problems persist, please report an issue on the project's GitHub page.
