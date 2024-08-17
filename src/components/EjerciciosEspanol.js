@@ -3,7 +3,7 @@ import './EjerciciosEspanol.css';
 import ejerciciosData from '../data/ejercicios.json';
 
 const EjerciciosEspanol = () => {
-  const [ejercicios, setEjercicios] = useState(ejerciciosData);
+  const [ejercicios] = useState(ejerciciosData);
   const [ejercicioActual, setEjercicioActual] = useState(0);
   const [respuestaUsuario, setRespuestaUsuario] = useState('');
   const [feedback, setFeedback] = useState('');
