@@ -3,6 +3,7 @@ import './EjerciciosEspanol.css';
 import ejerciciosData from '../data/ejercicios.json';
 
 const EjerciciosEspanol = () => {
+  const [ejercicios, setEjercicios] = useState(ejerciciosData);
   const [ejercicioActual, setEjercicioActual] = useState(0);
   const [respuestaUsuario, setRespuestaUsuario] = useState('');
   const [feedback, setFeedback] = useState('');
@@ -22,7 +23,7 @@ const EjerciciosEspanol = () => {
       return;
     }
 
-    const respuestaCorrecta = ejerciciosData[ejercicioActual].respuesta;
+    const respuestaCorrecta = ejercicios[ejercicioActual].respuesta;
     if (respuestaUsuario.toLowerCase().trim() === respuestaCorrecta) {
       setFeedback('¡Correcto! Muy bien.');
       setMostrarRespuestaCorrecta(true);
@@ -38,7 +39,7 @@ const EjerciciosEspanol = () => {
   };
 
   const siguienteEjercicio = () => {
-    if (ejercicioActual < ejerciciosData.length - 1) {
+    if (ejercicioActual < ejercicios.length - 1) {
       setEjercicioActual(ejercicioActual + 1);
     } else {
       setFeedback('¡Has completado todos los ejercicios!');
@@ -52,14 +53,14 @@ const EjerciciosEspanol = () => {
     setMostrarRespuestaCorrecta(false);
   };
 
-  const progreso = ((ejercicioActual + 1) / ejerciciosData.length) * 100;
+  const progreso = ((ejercicioActual + 1) / ejercicios.length) * 100;
 
   return (
     <div className="ejercicios-espanol">
-      <h1>Ejercicios de Colores en Español</h1>
+      <h1>Ejercicios de Español</h1>
       <p className="nivel">Nivel: Principiante</p>
       <div className="ejercicio">
-        <p className="pregunta">{ejerciciosData[ejercicioActual].pregunta}</p>
+        <p className="pregunta">{ejercicios[ejercicioActual].pregunta}</p>
         <input
           type="text"
           value={respuestaUsuario}
@@ -78,7 +79,7 @@ const EjerciciosEspanol = () => {
           <div className="progreso-bar" style={{ width: `${progreso}%` }}></div>
         </div>
         <p className="contador">
-          Ejercicio {ejercicioActual + 1} de {ejerciciosData.length}
+          Ejercicio {ejercicioActual + 1} de {ejercicios.length}
         </p>
       </div>
       <div className="botones">
@@ -87,7 +88,7 @@ const EjerciciosEspanol = () => {
         </button>
         <button 
           onClick={siguienteEjercicio} 
-          disabled={!mostrarRespuestaCorrecta || ejercicioActual === ejerciciosData.length - 1}
+          disabled={!mostrarRespuestaCorrecta || ejercicioActual === ejercicios.length - 1}
           className="siguiente"
         >
           Siguiente
