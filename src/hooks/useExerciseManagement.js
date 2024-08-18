@@ -40,19 +40,29 @@ function useExerciseManagement() {
       return;
     }
 
-    const respuestasAceptables = ejercicioActual.respuestas_aceptables.split(',').map(r => r.trim());
+    try {
+      const respuestasAceptables = ejercicioActual.respuestas_aceptables.split(',').map(r => r.trim());
 
-    const respuestaUsuarioNormalizada = respuestaUsuario.toLowerCase().trim();
-    const respuestasAceptablesNormalizadas = respuestasAceptables.map(respuesta => 
-      respuesta.toLowerCase().trim()
-    );
+      if (respuestasAceptables.length === 0) {
+        setError('Error: No hay respuestas aceptables definidas para este ejercicio.');
+        return;
+      }
 
-    if (respuestasAceptablesNormalizadas.includes(respuestaUsuarioNormalizada)) {
-      setRetroalimentacion('¡Correcto!');
-      setEstadisticas(prev => ({ ...prev, correctas: prev.correctas + 1 }));
-    } else {
-      setRetroalimentacion(`Incorrecto. La respuesta correcta es: ${respuestasAceptables.join(' o ')}`);
-      setEstadisticas(prev => ({ ...prev, incorrectas: prev.incorrectas + 1 }));
+      const respuestaUsuarioNormalizada = respuestaUsuario.toLowerCase().trim();
+      const respuestasAceptablesNormalizadas = respuestasAceptables.map(respuesta => 
+        respuesta.toLowerCase().trim()
+      );
+
+      if (respuestasAceptablesNormalizadas.includes(respuestaUsuarioNormalizada)) {
+        setRetroalimentacion('¡Correcto!');
+        setEstadisticas(prev => ({ ...prev, correctas: prev.correctas + 1 }));
+      } else {
+        setRetroalimentacion(`Incorrecto. La respuesta correcta es: ${respuestasAceptables.join(' o ')}`);
+        setEstadisticas(prev => ({ ...prev, incorrectas: prev.incorrectas + 1 }));
+      }
+    } catch (error) {
+      console.error('Error al verificar respuesta:', error);
+      setError('Error al verificar la respuesta. Por favor, intente de nuevo.');
     }
   }, [ejercicioActual, respuestaUsuario]);
 

@@ -52,7 +52,7 @@ pool.connect((err, client, release) => {
   }
 });
 
-// Initialize database and load seed data if necessary
+// Initialize database
 async function initializeDatabase() {
   const client = await pool.connect();
   try {
@@ -75,23 +75,6 @@ async function initializeDatabase() {
         )
       `);
       console.log('Tabla de ejercicios creada');
-      
-      // Load seed data
-      const seedData = JSON.parse(fs.readFileSync(path.join(__dirname, 'src', 'data', 'ejercicios.json'), 'utf8'));
-      for (const ejercicio of seedData) {
-        await client.query(
-          'INSERT INTO ejercicios (pregunta, palabras_clave, respuestas_aceptables, dificultad, categoria, pista) VALUES ($1, $2, $3, $4, $5, $6)',
-          [
-            ejercicio.pregunta,
-            ejercicio.keywords ? ejercicio.keywords.join(', ') : '',
-            ejercicio.acceptableAnswers ? ejercicio.acceptableAnswers.join(', ') : '',
-            ejercicio.difficulty,
-            ejercicio.category,
-            ejercicio.hint
-          ]
-        );
-      }
-      console.log('Datos iniciales cargados');
     } else {
       console.log('La tabla de ejercicios ya existe');
     }
