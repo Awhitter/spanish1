@@ -127,7 +127,6 @@ const errorHandler = (res, error, message) => {
 app.get('/ejercicios', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM ejercicios');
-    console.log(`Ejercicios obtenidos: ${result.rows.length}`);
     res.json(result.rows);
   } catch (error) {
     errorHandler(res, error, 'Error al obtener ejercicios:');
@@ -136,16 +135,16 @@ app.get('/ejercicios', async (req, res) => {
 
 // Add a new exercise
 app.post('/ejercicios', async (req, res) => {
-  const { pregunta, palabrasClave, respuestasAceptables, dificultad, categoria, pista } = req.body;
+  const { pregunta, palabras_clave, respuestas_aceptables, dificultad, categoria, pista } = req.body;
   
-  if (!pregunta || !respuestasAceptables) {
+  if (!pregunta || !respuestas_aceptables) {
     return res.status(400).json({ error: 'La pregunta y al menos una respuesta aceptable son obligatorias' });
   }
 
   try {
     const result = await pool.query(
       'INSERT INTO ejercicios (pregunta, palabras_clave, respuestas_aceptables, dificultad, categoria, pista) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
-      [pregunta, palabrasClave, respuestasAceptables, dificultad, categoria, pista]
+      [pregunta, palabras_clave, respuestas_aceptables, dificultad, categoria, pista]
     );
     const nuevoEjercicio = result.rows[0];
     res.status(201).json(nuevoEjercicio);
@@ -158,16 +157,16 @@ app.post('/ejercicios', async (req, res) => {
 // Update an exercise
 app.put('/ejercicios/:id', async (req, res) => {
   const { id } = req.params;
-  const { pregunta, palabrasClave, respuestasAceptables, dificultad, categoria, pista } = req.body;
+  const { pregunta, palabras_clave, respuestas_aceptables, dificultad, categoria, pista } = req.body;
   
-  if (!pregunta || !respuestasAceptables) {
+  if (!pregunta || !respuestas_aceptables) {
     return res.status(400).json({ error: 'La pregunta y al menos una respuesta aceptable son obligatorias' });
   }
 
   try {
     const result = await pool.query(
       'UPDATE ejercicios SET pregunta = $1, palabras_clave = $2, respuestas_aceptables = $3, dificultad = $4, categoria = $5, pista = $6 WHERE id = $7 RETURNING *',
-      [pregunta, palabrasClave, respuestasAceptables, dificultad, categoria, pista, id]
+      [pregunta, palabras_clave, respuestas_aceptables, dificultad, categoria, pista, id]
     );
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Ejercicio no encontrado' });

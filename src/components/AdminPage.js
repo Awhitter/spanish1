@@ -15,8 +15,8 @@ function AdminPage() {
   const [ejercicioEditando, setEjercicioEditando] = useState(null);
   const [nuevoEjercicio, setNuevoEjercicio] = useState({
     pregunta: '',
-    palabrasClave: [],
-    respuestasAceptables: [],
+    palabras_clave: '',
+    respuestas_aceptables: '',
     dificultad: 'fácil',
     categoria: '',
     pista: ''
@@ -68,17 +68,10 @@ function AdminPage() {
   };
 
   const manejarCambioInput = (e, campo) => {
-    if (campo === 'palabrasClave' || campo === 'respuestasAceptables') {
-      setNuevoEjercicio({
-        ...nuevoEjercicio,
-        [campo]: e.target.value.split(',').map(item => item.trim())
-      });
-    } else {
-      setNuevoEjercicio({
-        ...nuevoEjercicio,
-        [campo]: e.target.value
-      });
-    }
+    setNuevoEjercicio({
+      ...nuevoEjercicio,
+      [campo]: e.target.value
+    });
   };
 
   const agregarEjercicioAPI = async (ejercicio) => {
@@ -97,7 +90,7 @@ function AdminPage() {
   };
 
   const manejarAgregarEjercicio = async () => {
-    if (nuevoEjercicio.pregunta.trim() === '' || nuevoEjercicio.respuestasAceptables.length === 0) {
+    if (nuevoEjercicio.pregunta.trim() === '' || nuevoEjercicio.respuestas_aceptables.trim() === '') {
       setMensajeError('Por favor, ingrese tanto la pregunta como al menos una respuesta aceptable.');
       return;
     }
@@ -106,8 +99,8 @@ function AdminPage() {
       setEjercicios([...ejercicios, ejercicioAgregado]);
       setNuevoEjercicio({
         pregunta: '',
-        palabrasClave: [],
-        respuestasAceptables: [],
+        palabras_clave: '',
+        respuestas_aceptables: '',
         dificultad: 'fácil',
         categoria: '',
         pista: ''
@@ -123,27 +116,19 @@ function AdminPage() {
   const manejarEditarEjercicio = (ejercicio) => {
     setEjercicioEditando({
       ...ejercicio,
-      palabras_clave: ejercicio.palabras_clave || [],
-      respuestas_aceptables: ejercicio.respuestas_aceptables || []
+      palabras_clave: ejercicio.palabras_clave || '',
+      respuestas_aceptables: ejercicio.respuestas_aceptables || ''
     });
   };
 
   const manejarActualizarEjercicio = useCallback(async (ejercicioActualizado) => {
     try {
-      const dataToSend = {
-        ...ejercicioActualizado,
-        palabrasClave: ejercicioActualizado.palabras_clave,
-        respuestasAceptables: ejercicioActualizado.respuestas_aceptables
-      };
-      delete dataToSend.palabras_clave;
-      delete dataToSend.respuestas_aceptables;
-
       const response = await fetch(`${BACKEND_URL}/ejercicios/${ejercicioActualizado.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(dataToSend),
+        body: JSON.stringify(ejercicioActualizado),
       });
       if (!response.ok) {
         const errorData = await response.json();
@@ -267,16 +252,16 @@ function AdminPage() {
           <label>Palabras Clave (separadas por comas):</label>
           <input
             type="text"
-            value={nuevoEjercicio.palabrasClave.join(', ')}
-            onChange={(e) => manejarCambioInput(e, 'palabrasClave')}
+            value={nuevoEjercicio.palabras_clave}
+            onChange={(e) => manejarCambioInput(e, 'palabras_clave')}
           />
         </div>
         <div className="form-group">
           <label>Respuestas Aceptables (separadas por comas):</label>
           <input
             type="text"
-            value={nuevoEjercicio.respuestasAceptables.join(', ')}
-            onChange={(e) => manejarCambioInput(e, 'respuestasAceptables')}
+            value={nuevoEjercicio.respuestas_aceptables}
+            onChange={(e) => manejarCambioInput(e, 'respuestas_aceptables')}
           />
         </div>
         <div className="form-group">
@@ -311,7 +296,7 @@ function AdminPage() {
 
       <div className="admin-section">
         <h3>Subir Archivo</h3>
-        <p>Puede subir archivos CSV. Asegúrese de que el archivo tenga las siguientes columnas: pregunta, palabrasClave, respuestasAceptables, dificultad, categoria, pista</p>
+        <p>Puede subir archivos CSV. Asegúrese de que el archivo tenga las siguientes columnas: pregunta, palabras_clave, respuestas_aceptables, dificultad, categoria, pista</p>
         <input type="file" accept=".csv" onChange={manejarSubirArchivo} />
       </div>
 
@@ -352,13 +337,13 @@ function AdminPage() {
                     rows="3"
                   />
                   <input
-                    value={ejercicioEditando.palabras_clave ? ejercicioEditando.palabras_clave.join(', ') : ''}
-                    onChange={(e) => setEjercicioEditando({...ejercicioEditando, palabras_clave: e.target.value.split(',').map(k => k.trim())})}
+                    value={ejercicioEditando.palabras_clave}
+                    onChange={(e) => setEjercicioEditando({...ejercicioEditando, palabras_clave: e.target.value})}
                     placeholder="Palabras Clave"
                   />
                   <input
-                    value={ejercicioEditando.respuestas_aceptables ? ejercicioEditando.respuestas_aceptables.join(', ') : ''}
-                    onChange={(e) => setEjercicioEditando({...ejercicioEditando, respuestas_aceptables: e.target.value.split(',').map(a => a.trim())})}
+                    value={ejercicioEditando.respuestas_aceptables}
+                    onChange={(e) => setEjercicioEditando({...ejercicioEditando, respuestas_aceptables: e.target.value})}
                     placeholder="Respuestas Aceptables"
                   />
                   <select
@@ -387,8 +372,8 @@ function AdminPage() {
               ) : (
                 <div className="ejercicio-view">
                   <h4>{ejercicio.pregunta}</h4>
-                  <p><strong>Palabras Clave:</strong> {ejercicio.palabras_clave ? ejercicio.palabras_clave.join(', ') : 'N/A'}</p>
-                  <p><strong>Respuestas:</strong> {ejercicio.respuestas_aceptables ? ejercicio.respuestas_aceptables.join(', ') : 'N/A'}</p>
+                  <p><strong>Palabras Clave:</strong> {ejercicio.palabras_clave || 'N/A'}</p>
+                  <p><strong>Respuestas:</strong> {ejercicio.respuestas_aceptables || 'N/A'}</p>
                   <p><strong>Dificultad:</strong> {ejercicio.dificultad}</p>
                   <p><strong>Categoría:</strong> {ejercicio.categoria}</p>
                   <p><strong>Pista:</strong> {ejercicio.pista}</p>
