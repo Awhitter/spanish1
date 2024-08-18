@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useContext, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { CSSTransition } from 'react-transition-group';
+import { Player } from '@lottiefiles/react-lottie-player';
 import { DarkModeContext } from '../App';
 import useExerciseManagement from '../hooks/useExerciseManagement';
 import './EjerciciosEspanol.css';
@@ -82,7 +83,17 @@ function EjerciciosEspanol() {
   }
 
   if (!ejercicioActual) {
-    return <div className="loading">Cargando ejercicios...</div>;
+    return (
+      <div className="loading">
+        <Player
+          autoplay
+          loop
+          src="https://lottie.host/4cdef2e6-3fad-49aa-abea-2abe18a10962/FUGGRSDYDh.json"
+          style={{ height: '300px', width: '300px' }}
+        />
+        <p>Cargando ejercicios...</p>
+      </div>
+    );
   }
 
   if (moduleComplete) {
@@ -90,6 +101,12 @@ function EjerciciosEspanol() {
       <div className="module-complete">
         <h2>¡Felicidades!</h2>
         <p>Has completado todos los ejercicios en este módulo.</p>
+        <Player
+          autoplay
+          loop
+          src="https://lottie.host/dfea151d-82eb-48c5-b01c-6f59ec4c9488/BhCdCrapss.json"
+          style={{ height: '300px', width: '300px' }}
+        />
         <div className="module-complete-actions">
           <button onClick={() => navigate('/')} className="btn btn-primary">Volver al inicio</button>
           <button onClick={reiniciarQuiz} className="btn btn-secondary">Reiniciar módulo</button>
