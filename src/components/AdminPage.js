@@ -6,20 +6,11 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000'
 
 function AdminPage() {
   const [ejercicios, setEjercicios] = useState([]);
-  const [pregunta, setPregunta] = useState('');
-  const [palabrasClave, setPalabrasClave] = useState('');
-  const [respuestasAceptables, setRespuestasAceptables] = useState('');
-  const [dificultad, setDificultad] = useState('');
-  const [categoria, setCategoria] = useState('');
-  const [pista, setPista] = useState('');
-  const [modulo, setModulo] = useState('');
-  const [editingId, setEditingId] = useState(null);
+  const [editingExercise, setEditingExercise] = useState(null);
   const [file, setFile] = useState(null);
   const [message, setMessage] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
 
   useEffect(() => {
@@ -49,35 +40,23 @@ function AdminPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const ejercicioData = {
-      pregunta,
-      palabras_clave: palabrasClave,
-      respuestas_aceptables: respuestasAceptables,
-      dificultad,
-      categoria,
-      pista,
-      modulo
-    };
-
     try {
-      const url = editingId
-        ? `${BACKEND_URL}/ejercicios/${editingId}`
+      const url = editingExercise.id
+        ? `${BACKEND_URL}/ejercicios/${editingExercise.id}`
         : `${BACKEND_URL}/ejercicios`;
-      const method = editingId ? 'PUT' : 'POST';
+      const method = editingExercise.id ? 'PUT' : 'POST';
       const response = await fetch(url, {
         method: method,
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(ejercicioData),
+        body: JSON.stringify(editingExercise),
       });
 
       if (response.ok) {
-        setMessage(editingId ? 'Ejercicio actualizado con éxito' : 'Ejercicio agregado con éxito');
-        clearForm();
+        setMessage(editingExercise.id ? 'Ejercicio actualizado con éxito' : 'Ejercicio agregado con éxito');
+        setEditingExercise(null);
         fetchEjercicios();
-        setShowAddModal(false);
-        setShowEditModal(false);
       } else {
         const errorData = await response.json();
         setMessage(`Error al procesar el ejercicio: ${errorData.message || 'Intente de nuevo'}`);
@@ -110,35 +89,12 @@ function AdminPage() {
   };
 
   const handleEdit = (ejercicio) => {
-    setEditingId(ejercicio.id);
-    setPregunta(ejercicio.pregunta);
-    setPalabrasClave(ejercicio.palabras_clave);
-    setRespuestasAceptables(ejercicio.respuestas_aceptables);
-    setDificultad(ejercicio.dificultad);
-    setCategoria(ejercicio.categoria);
-    setPista(ejercicio.pista);
-    setModulo(ejercicio.modulo);
-    setShowEditModal(true);
+    setEditingExercise({ ...ejercicio });
   };
 
-  const handleUpdate = async (e) => {
-    e.preventDefault();
-    if (window.confirm('¿Está seguro de que desea actualizar este ejercicio?')) {
-      await handleSubmit(e);
-    }
-  };
-
-  const clearForm = () => {
-    setEditingId(null);
-    setPregunta('');
-    setPalabrasClave('');
-    setRespuestasAceptables('');
-    setDificultad('');
-    setCategoria('');
-    setPista('');
-    setModulo('');
-    setShowAddModal(false);
-    setShowEditModal(false);
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setEditingExercise(prev => ({ ...prev, [name]: value }));
   };
 
   const handleFileChange = (e) => {
@@ -219,6 +175,111 @@ function AdminPage() {
     );
   }
 
+  if (editingExercise) {
+    return (
+      <div className="admin-page edit-page">
+        <div className="edit-header">
+          <h2>{editingExercise.id ? 'Editar Ejercicio' : 'Agregar Ejercicio'}</h2>
+          <div className="edit-actions">
+            <button onClick={handleSubmit} className="btn btn-primary">Guardar</button>
+            <button onClick={() => setEditingExercise(null)} className="btn btn-secondary">Cancelar</button>
+          </div>
+        </div>
+        <div className="edit-content">
+          <div className="edit-form">
+            <div className="form-group">
+              <label htmlFor="pregunta">Pregunta:</label>
+              <textarea
+                id="pregunta"
+                name="pregunta"
+                value={editingExercise.pregunta}
+                onChange={handleInputChange}
+                rows="6"
+              />
+            </div>
+            <div className="form-row">
+              <div className="form-group">
+                <label htmlFor="palabras_clave">Palabras clave:</label>
+                <input
+                  id="palabras_clave"
+                  name="palabras_clave"
+                  type="text"
+                  value={editingExercise.palabras_clave}
+                  onChange={handleInputChange}
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="respuestas_aceptables">Respuestas aceptables:</label>
+                <input
+                  id="respuestas_aceptables"
+                  name="respuestas_aceptables"
+                  type="text"
+                  value={editingExercise.respuestas_aceptables}
+                  onChange={handleInputChange}
+                />
+              </div>
+            </div>
+            <div className="form-row">
+              <div className="form-group">
+                <label htmlFor="dificultad">Dificultad:</label>
+                <select
+                  id="dificultad"
+                  name="dificultad"
+                  value={editingExercise.dificultad}
+                  onChange={handleInputChange}
+                >
+                  <option value="fácil">Fácil</option>
+                  <option value="medio">Medio</option>
+                  <option value="difícil">Difícil</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label htmlFor="categoria">Categoría:</label>
+                <input
+                  id="categoria"
+                  name="categoria"
+                  type="text"
+                  value={editingExercise.categoria}
+                  onChange={handleInputChange}
+                />
+              </div>
+            </div>
+            <div className="form-group">
+              <label htmlFor="pista">Pista:</label>
+              <input
+                id="pista"
+                name="pista"
+                type="text"
+                value={editingExercise.pista}
+                onChange={handleInputChange}
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="modulo">Módulo:</label>
+              <input
+                id="modulo"
+                name="modulo"
+                type="text"
+                value={editingExercise.modulo}
+                onChange={handleInputChange}
+              />
+            </div>
+          </div>
+          <div className="edit-preview">
+            <h3>Vista previa</h3>
+            <div className="preview-content">
+              <h4>{editingExercise.pregunta}</h4>
+              <p><strong>Pista:</strong> {editingExercise.pista}</p>
+              <p><strong>Dificultad:</strong> {editingExercise.dificultad}</p>
+              <p><strong>Categoría:</strong> {editingExercise.categoria}</p>
+              <p><strong>Módulo:</strong> {editingExercise.modulo}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="admin-page">
       <button className="dark-mode-toggle" onClick={toggleDarkMode}>
@@ -239,7 +300,7 @@ function AdminPage() {
 
       {message && <p className="message">{message}</p>}
       <div className="admin-content">
-        <button onClick={() => setShowAddModal(true)} className="btn btn-primary">Agregar Ejercicio</button>
+        <button onClick={() => setEditingExercise({})} className="btn btn-primary">Agregar Ejercicio</button>
 
         <div className="csv-upload">
           <h3>Subir archivo CSV</h3>
@@ -255,7 +316,7 @@ function AdminPage() {
         <h3>Ejercicios Existentes</h3>
         {ejercicios.map((ejercicio) => (
           <div key={ejercicio.id} className="exercise-item">
-            <h4>Pregunta: {ejercicio.pregunta}</h4>
+            <h4>{ejercicio.pregunta}</h4>
             <p><strong>Módulo:</strong> {ejercicio.modulo}</p>
             <p><strong>Respuestas:</strong> {ejercicio.respuestas_aceptables}</p>
             <p><strong>Dificultad:</strong> {ejercicio.dificultad}</p>
@@ -269,129 +330,8 @@ function AdminPage() {
           </div>
         ))}
       </div>
-
-      {showAddModal && (
-        <div className="modal">
-          <div className="modal-content">
-            <h3>Agregar Ejercicio</h3>
-            <form onSubmit={handleSubmit} className="exercise-form">
-              {renderFormFields()}
-              <div className="modal-actions">
-                <button type="submit" className="btn btn-primary">Agregar Ejercicio</button>
-                <button type="button" onClick={clearForm} className="btn btn-secondary">Cancelar</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {showEditModal && (
-        <div className="modal">
-          <div className="modal-content edit-modal">
-            <h3>Editar Ejercicio</h3>
-            <form onSubmit={handleUpdate} className="exercise-form">
-              {renderFormFields()}
-              <div className="modal-actions">
-                <button type="submit" className="btn btn-primary">Actualizar Ejercicio</button>
-                <button type="button" onClick={clearForm} className="btn btn-secondary">Cancelar</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
-
-  function renderFormFields() {
-    return (
-      <>
-        <div className="form-group">
-          <label htmlFor="pregunta">Pregunta:</label>
-          <textarea
-            id="pregunta"
-            value={pregunta}
-            onChange={(e) => setPregunta(e.target.value)}
-            placeholder="Pregunta"
-            required
-            rows="6"
-            className="large-textarea"
-          />
-        </div>
-        <div className="form-row">
-          <div className="form-group">
-            <label htmlFor="palabrasClave">Palabras clave:</label>
-            <input
-              id="palabrasClave"
-              type="text"
-              value={palabrasClave}
-              onChange={(e) => setPalabrasClave(e.target.value)}
-              placeholder="Separadas por comas"
-            />
-          </div>
-          <div className="form-group">
-            <label htmlFor="respuestasAceptables">Respuestas aceptables:</label>
-            <input
-              id="respuestasAceptables"
-              type="text"
-              value={respuestasAceptables}
-              onChange={(e) => setRespuestasAceptables(e.target.value)}
-              placeholder="Separadas por comas"
-              required
-            />
-          </div>
-        </div>
-        <div className="form-row">
-          <div className="form-group">
-            <label htmlFor="dificultad">Dificultad:</label>
-            <select
-              id="dificultad"
-              value={dificultad}
-              onChange={(e) => setDificultad(e.target.value)}
-              required
-            >
-              <option value="">Selecciona la dificultad</option>
-              <option value="fácil">Fácil</option>
-              <option value="medio">Medio</option>
-              <option value="difícil">Difícil</option>
-            </select>
-          </div>
-          <div className="form-group">
-            <label htmlFor="categoria">Categoría:</label>
-            <input
-              id="categoria"
-              type="text"
-              value={categoria}
-              onChange={(e) => setCategoria(e.target.value)}
-              placeholder="Categoría"
-            />
-          </div>
-        </div>
-        <div className="form-row">
-          <div className="form-group">
-            <label htmlFor="pista">Pista:</label>
-            <input
-              id="pista"
-              type="text"
-              value={pista}
-              onChange={(e) => setPista(e.target.value)}
-              placeholder="Pista"
-            />
-          </div>
-          <div className="form-group">
-            <label htmlFor="modulo">Módulo:</label>
-            <input
-              id="modulo"
-              type="text"
-              value={modulo}
-              onChange={(e) => setModulo(e.target.value)}
-              placeholder="Módulo"
-              required
-            />
-          </div>
-        </div>
-      </>
-    );
-  }
 }
 
 export default AdminPage;
