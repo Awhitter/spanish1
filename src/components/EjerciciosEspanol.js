@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { CSSTransition } from 'react-transition-group';
 import './EjerciciosEspanol.css';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000';
@@ -10,6 +11,7 @@ function EjerciciosEspanol() {
   const [retroalimentacion, setRetroalimentacion] = useState('');
   const [estadisticas, setEstadisticas] = useState({ correctas: 0, incorrectas: 0, saltadas: 0 });
   const [mostrarPista, setMostrarPista] = useState(false);
+  const [animacionSalida, setAnimacionSalida] = useState(false);
 
   useEffect(() => {
     obtenerEjercicios();
@@ -33,6 +35,10 @@ function EjerciciosEspanol() {
 
   const manejarEnvio = (e) => {
     e.preventDefault();
+    verificarRespuesta();
+  };
+
+  const verificarRespuesta = () => {
     if (ejercicioActual.respuestas_aceptables.includes(respuestaUsuario.toLowerCase().trim())) {
       setRetroalimentacion('¡Correcto!');
       setEstadisticas(prev => ({ ...prev, correctas: prev.correctas + 1 }));
@@ -48,15 +54,24 @@ function EjerciciosEspanol() {
   };
 
   const siguienteEjercicio = () => {
-    const siguienteEjercicio = ejercicios[Math.floor(Math.random() * ejercicios.length)];
-    setEjercicioActual(siguienteEjercicio);
-    setRespuestaUsuario('');
-    setRetroalimentacion('');
-    setMostrarPista(false);
+    setAnimacionSalida(true);
+    setTimeout(() => {
+      const siguienteEjercicio = ejercicios[Math.floor(Math.random() * ejercicios.length)];
+      setEjercicioActual(siguienteEjercicio);
+      setRespuestaUsuario('');
+      setRetroalimentacion('');
+      setMostrarPista(false);
+      setAnimacionSalida(false);
+    }, 300);
   };
 
   const manejarMostrarPista = () => {
     setMostrarPista(true);
+  };
+
+  const reiniciarQuiz = () => {
+    setEstadisticas({ correctas: 0, incorrectas: 0, saltadas: 0 });
+    siguienteEjercicio();
   };
 
   if (!ejercicioActual) {
@@ -66,24 +81,36 @@ function EjerciciosEspanol() {
   return (
     <div className="ejercicios-espanol">
       <h2>Ejercicios de Español</h2>
-      <div className="contenedor-ejercicio">
-        <h3>Nivel: {ejercicioActual.dificultad}</h3>
-        <p className="pregunta">{ejercicioActual.pregunta}</p>
-        <form onSubmit={manejarEnvio}>
-          <input
-            type="text"
-            value={respuestaUsuario}
-            onChange={(e) => setRespuestaUsuario(e.target.value)}
-            placeholder="Tu respuesta"
-          />
-          <button type="submit">Verificar</button>
-        </form>
-        <button onClick={manejarMostrarPista} disabled={mostrarPista}>Pista</button>
-        {mostrarPista && <p className="pista">{ejercicioActual.pista}</p>}
-        <button onClick={siguienteEjercicio}>Reiniciar</button>
-        <button onClick={manejarSaltar}>Saltar</button>
-        {retroalimentacion && <p className="retroalimentacion">{retroalimentacion}</p>}
-      </div>
+      <CSSTransition
+        in={!animacionSalida}
+        timeout={300}
+        classNames="fade"
+        unmountOnExit
+      >
+        <div className="contenedor-ejercicio">
+          <h3>Nivel: {ejercicioActual.dificultad}</h3>
+          <p className="pregunta">{ejercicioActual.pregunta}</p>
+          <form onSubmit={manejarEnvio}>
+            <input
+              type="text"
+              value={respuestaUsuario}
+              onChange={(e) => setRespuestaUsuario(e.target.value)}
+              placeholder="Tu respuesta"
+            />
+            <button type="submit" className="btn btn-primary">Verificar</button>
+          </form>
+          <div className="botones-container">
+            <button onClick={manejarMostrarPista} disabled={mostrarPista} className="btn btn-secondary">
+              Pista
+            </button>
+            <button onClick={siguienteEjercicio} className="btn btn-primary">Siguiente</button>
+            <button onClick={manejarSaltar} className="btn btn-secondary">Saltar</button>
+            <button onClick={reiniciarQuiz} className="btn btn-warning">Reiniciar Quiz</button>
+          </div>
+          {mostrarPista && <p className="pista">{ejercicioActual.pista}</p>}
+          {retroalimentacion && <p className="retroalimentacion">{retroalimentacion}</p>}
+        </div>
+      </CSSTransition>
       <div className="estadisticas">
         <p>Ejercicio {ejercicios.indexOf(ejercicioActual) + 1} de {ejercicios.length}</p>
         <p>Correctas: {estadisticas.correctas}</p>

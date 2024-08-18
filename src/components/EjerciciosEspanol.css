@@ -1,190 +1,136 @@
 .ejercicios-espanol {
-  max-width: 800px;
-  margin: 40px auto;
-  padding: 40px;
-  background: linear-gradient(to bottom right, #e6f2ff, #f0e6ff);
-  border-radius: 20px;
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+  background-color: #f0f8ff;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
-h1 {
-  color: #1e40af;
+h2 {
+  color: #4a4a4a;
   text-align: center;
   margin-bottom: 20px;
-  font-size: 36px;
 }
 
-.nivel {
-  text-align: center;
-  color: #4b5563;
-  margin-bottom: 30px;
-  font-size: 18px;
+.contenedor-ejercicio {
+  background-color: #ffffff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.ejercicio {
-  margin-bottom: 30px;
-  transition: opacity 0.5s ease;
-}
-
-.animate-question {
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+h3 {
+  color: #6c757d;
+  margin-bottom: 15px;
 }
 
 .pregunta {
-  font-size: 24px;
-  font-weight: 500;
-  color: #1f2937;
-  margin-bottom: 20px;
-}
-
-input {
-  width: 100%;
-  padding: 15px;
-  margin-bottom: 20px;
-  border: 2px solid #d1d5db;
-  border-radius: 8px;
   font-size: 18px;
-  transition: border-color 0.3s ease;
+  margin-bottom: 20px;
+  color: #333;
 }
 
-input:focus {
-  outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+form {
+  display: flex;
+  margin-bottom: 15px;
 }
 
-button {
-  width: 100%;
-  padding: 15px;
-  border: none;
-  border-radius: 8px;
+input[type="text"] {
+  flex-grow: 1;
+  padding: 10px;
+  font-size: 16px;
+  border: 1px solid #ced4da;
+  border-radius: 4px 0 0 4px;
+}
+
+.btn {
+  padding: 10px 15px;
+  font-size: 16px;
   cursor: pointer;
-  font-weight: bold;
-  font-size: 18px;
-  transition: all 0.3s ease;
+  border: none;
+  border-radius: 4px;
+  transition: background-color 0.3s ease;
 }
 
-.verificar {
-  background-color: #10b981;
+.btn-primary {
+  background-color: #007bff;
   color: white;
 }
 
-.verificar:hover {
-  background-color: #059669;
-  transform: translateY(-2px);
+.btn-primary:hover {
+  background-color: #0056b3;
 }
 
-.feedback {
-  text-align: center;
-  font-weight: bold;
-  margin-top: 20px;
-  font-size: 20px;
-  opacity: 0;
-  animation: fadeIn 0.5s ease-in-out forwards;
+.btn-secondary {
+  background-color: #6c757d;
+  color: white;
 }
 
-.correcto {
-  color: #059669;
+.btn-secondary:hover {
+  background-color: #545b62;
 }
 
-.incorrecto {
-  color: #dc2626;
+.btn-warning {
+  background-color: #ffc107;
+  color: #212529;
 }
 
-.progreso-container {
-  width: 100%;
-  height: 15px;
-  background-color: #e5e7eb;
-  border-radius: 10px;
-  overflow: hidden;
-  margin-top: 30px;
+.btn-warning:hover {
+  background-color: #e0a800;
 }
 
-.progreso-bar {
-  height: 100%;
-  background-color: #3b82f6;
-  transition: width 0.5s ease;
-}
-
-.contador {
-  text-align: center;
-  color: #4b5563;
-  font-size: 16px;
-  margin-top: 15px;
-}
-
-.botones {
+.botones-container {
   display: flex;
   justify-content: space-between;
-  margin-top: 30px;
+  margin-bottom: 15px;
 }
 
-.reiniciar, .saltar, .siguiente {
+.botones-container button {
   flex: 1;
-  margin: 0 10px;
+  margin: 0 5px;
 }
 
-.reiniciar {
-  background-color: #9ca3af;
-  color: white;
+.pista {
+  font-style: italic;
+  color: #6c757d;
+  margin-top: 10px;
 }
 
-.reiniciar:hover {
-  background-color: #6b7280;
-  transform: translateY(-2px);
+.retroalimentacion {
+  font-weight: bold;
+  margin-top: 15px;
+  padding: 10px;
+  border-radius: 4px;
+  text-align: center;
 }
 
-.saltar {
-  background-color: #f59e0b;
-  color: white;
-}
-
-.saltar:hover {
-  background-color: #d97706;
-  transform: translateY(-2px);
-}
-
-.siguiente {
-  background-color: #3b82f6;
-  color: white;
-}
-
-.siguiente:hover {
-  background-color: #2563eb;
-  transform: translateY(-2px);
-}
-
-.siguiente:disabled {
-  background-color: #9ca3af;
-  cursor: not-allowed;
-  transform: none;
+.retroalimentacion:empty {
+  display: none;
 }
 
 .estadisticas {
-  margin-top: 30px;
-  background-color: #f3f4f6;
-  padding: 20px;
-  border-radius: 10px;
-  transition: all 0.3s ease;
+  margin-top: 20px;
+  text-align: center;
+  font-size: 14px;
+  color: #6c757d;
 }
 
-.estadisticas:hover {
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+.fade-enter {
+  opacity: 0;
 }
 
-.estadisticas p {
-  font-size: 18px;
-  margin: 10px 0;
-  color: #4b5563;
+.fade-enter-active {
+  opacity: 1;
+  transition: opacity 300ms ease-in;
+}
+
+.fade-exit {
+  opacity: 1;
+}
+
+.fade-exit-active {
+  opacity: 0;
+  transition: opacity 300ms ease-in;
 }

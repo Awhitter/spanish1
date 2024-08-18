@@ -3,8 +3,12 @@ import * as XLSX from 'xlsx';
 import './AdminPage.css';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000';
+const ADMIN_PASSWORD = 'hoje papa'; // Updated password
 
 function AdminPage() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [password, setPassword] = useState('');
+  const [showHint, setShowHint] = useState(false);
   const [ejercicios, setEjercicios] = useState([]);
   const [ejercicioEditando, setEjercicioEditando] = useState(null);
   const [nuevoEjercicio, setNuevoEjercicio] = useState({
@@ -19,8 +23,27 @@ function AdminPage() {
   const [mensajeExito, setMensajeExito] = useState('');
 
   useEffect(() => {
-    obtenerEjercicios();
-  }, []);
+    if (isAuthenticated) {
+      obtenerEjercicios();
+    }
+  }, [isAuthenticated]);
+
+  const handleLogin = (e) => {
+    e.preventDefault();
+    if (password.toLowerCase() === ADMIN_PASSWORD) {
+      setIsAuthenticated(true);
+      setMensajeError('');
+    } else {
+      setMensajeError('Contraseña incorrecta');
+      setShowHint(true);
+    }
+  };
+
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    setPassword('');
+    setShowHint(false);
+  };
 
   const obtenerEjercicios = async () => {
     try {
@@ -179,9 +202,31 @@ function AdminPage() {
     reader.readAsBinaryString(file);
   };
 
+  if (!isAuthenticated) {
+    return (
+      <div className="admin-login">
+        <h2>Iniciar sesión como administrador</h2>
+        {mensajeError && <div className="error-message">{mensajeError}</div>}
+        <form onSubmit={handleLogin}>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Contraseña"
+          />
+          <button type="submit">Iniciar sesión</button>
+        </form>
+        {showHint && (
+          <p className="password-hint">Pista: everyone calls him that "h__ (space) p___"</p>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="admin-page">
       <h2>Página de Administración</h2>
+      <button onClick={handleLogout} className="logout-button">Cerrar sesión</button>
       {mensajeError && <div className="error-message">{mensajeError}</div>}
       {mensajeExito && <div className="success-message">{mensajeExito}</div>}
       <h3>Agregar Nuevo Ejercicio</h3>
