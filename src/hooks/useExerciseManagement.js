@@ -25,7 +25,6 @@ function useExerciseManagement() {
         setError('No hay ejercicios disponibles. Por favor, añade algunos ejercicios en la página de administración.');
       }
     } catch (error) {
-      console.error('Error al obtener ejercicios:', error);
       setError('Error al cargar los ejercicios. Por favor, intente de nuevo más tarde.');
     }
   }, []);
@@ -40,29 +39,24 @@ function useExerciseManagement() {
       return;
     }
 
-    try {
-      const respuestasAceptables = ejercicioActual.respuestas_aceptables.split(',').map(r => r.trim());
+    const respuestasAceptables = ejercicioActual.respuestas_aceptables.split(',').map(r => r.trim());
 
-      if (respuestasAceptables.length === 0) {
-        setError('Error: No hay respuestas aceptables definidas para este ejercicio.');
-        return;
-      }
+    if (respuestasAceptables.length === 0) {
+      setError('Error: No hay respuestas aceptables definidas para este ejercicio.');
+      return;
+    }
 
-      const respuestaUsuarioNormalizada = respuestaUsuario.toLowerCase().trim();
-      const respuestasAceptablesNormalizadas = respuestasAceptables.map(respuesta => 
-        respuesta.toLowerCase().trim()
-      );
+    const respuestaUsuarioNormalizada = respuestaUsuario.toLowerCase().trim();
+    const respuestasAceptablesNormalizadas = respuestasAceptables.map(respuesta => 
+      respuesta.toLowerCase().trim()
+    );
 
-      if (respuestasAceptablesNormalizadas.includes(respuestaUsuarioNormalizada)) {
-        setRetroalimentacion('¡Correcto!');
-        setEstadisticas(prev => ({ ...prev, correctas: prev.correctas + 1 }));
-      } else {
-        setRetroalimentacion(`Incorrecto. La respuesta correcta es: ${respuestasAceptables.join(' o ')}`);
-        setEstadisticas(prev => ({ ...prev, incorrectas: prev.incorrectas + 1 }));
-      }
-    } catch (error) {
-      console.error('Error al verificar respuesta:', error);
-      setError('Error al verificar la respuesta. Por favor, intente de nuevo.');
+    if (respuestasAceptablesNormalizadas.includes(respuestaUsuarioNormalizada)) {
+      setRetroalimentacion('¡Correcto!');
+      setEstadisticas(prev => ({ ...prev, correctas: prev.correctas + 1 }));
+    } else {
+      setRetroalimentacion(`Incorrecto. La respuesta correcta es: ${respuestasAceptables.join(' o ')}`);
+      setEstadisticas(prev => ({ ...prev, incorrectas: prev.incorrectas + 1 }));
     }
   }, [ejercicioActual, respuestaUsuario]);
 
@@ -80,9 +74,7 @@ function useExerciseManagement() {
     siguienteEjercicio();
   }, [siguienteEjercicio]);
 
-  const manejarMostrarPista = useCallback(() => {
-    setMostrarPista(true);
-  }, []);
+  const manejarMostrarPista = useCallback(() => setMostrarPista(true), []);
 
   const reiniciarQuiz = useCallback(() => {
     setEstadisticas({ correctas: 0, incorrectas: 0, saltadas: 0 });

@@ -4,8 +4,6 @@ const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
 const { Pool } = require('pg');
-const fs = require('fs');
-const path = require('path');
 const csv = require('csv-parser');
 const multer = require('multer');
 const upload = multer({ dest: 'uploads/' });
@@ -42,42 +40,74 @@ if (!connectionString) {
 
 const pool = new Pool({ connectionString });
 
-// Test database connection
-pool.connect((err, client, release) => {
-  if (err) {
-    console.error('Error connecting to the database:', err);
-  } else {
-    console.log('Successfully connected to the database');
-    release();
-  }
-});
-
 // Initialize database
 async function initializeDatabase() {
   const client = await pool.connect();
   try {
-    // Check if the exercises table exists
-    const tableExists = await client.query(
-      "SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'ejercicios')"
-    );
-    
-    if (!tableExists.rows[0].exists) {
-      // Create the ejercicios table with TEXT fields for palabras_clave and respuestas_aceptables
-      await client.query(`
-        CREATE TABLE ejercicios (
-          id SERIAL PRIMARY KEY,
-          pregunta TEXT NOT NULL,
-          palabras_clave TEXT,
-          respuestas_aceptables TEXT,
-          dificultad TEXT,
-          categoria TEXT,
-          pista TEXT
-        )
-      `);
-      console.log('Tabla de ejercicios creada');
-    } else {
-      console.log('La tabla de ejercicios ya existe');
+    await client.query('DROP TABLE IF EXISTS ejercicios');
+    await client.query(`
+      CREATE TABLE ejercicios (
+        id SERIAL PRIMARY KEY,
+        pregunta TEXT NOT NULL,
+        palabras_clave TEXT,
+        respuestas_aceptables TEXT,
+        dificultad TEXT,
+        categoria TEXT,
+        pista TEXT
+      )
+    `);
+    console.log('Tabla de ejercicios creada');
+
+    const seedData = [
+      {
+        pregunta: 'Complete: Los plátanos son _______.',
+        palabras_clave: 'amarillos',
+        respuestas_aceptables: 'amarillos',
+        dificultad: 'fácil',
+        categoria: 'colores',
+        pista: 'Es el color del sol.'
+      },
+      {
+        pregunta: '¿Cómo se dice "red" en español?',
+        palabras_clave: 'rojo',
+        respuestas_aceptables: 'rojo',
+        dificultad: 'fácil',
+        categoria: 'colores',
+        pista: 'Es el color de la sangre.'
+      },
+      {
+        pregunta: 'Complete: El cielo es _______.',
+        palabras_clave: 'azul',
+        respuestas_aceptables: 'azul',
+        dificultad: 'fácil',
+        categoria: 'colores',
+        pista: 'Es el color del mar también.'
+      },
+      {
+        pregunta: '¿Cuál es el color de la hierba?',
+        palabras_clave: 'verde',
+        respuestas_aceptables: 'verde',
+        dificultad: 'fácil',
+        categoria: 'colores',
+        pista: 'Es el color de las hojas de los árboles.'
+      },
+      {
+        pregunta: 'Complete: La nieve es _______.',
+        palabras_clave: 'blanca',
+        respuestas_aceptables: 'blanca',
+        dificultad: 'fácil',
+        categoria: 'colores',
+        pista: 'Es el color opuesto al negro.'
+      }
+    ];
+
+    for (const ejercicio of seedData) {
+      await client.query(
+        'INSERT INTO ejercicios (pregunta, palabras_clave, respuestas_aceptables, dificultad, categoria, pista) VALUES ($1, $2, $3, $4, $5, $6)',
+        [ejercicio.pregunta, ejercicio.palabras_clave, ejercicio.respuestas_aceptables, ejercicio.dificultad, ejercicio.categoria, ejercicio.pista]
+      );
     }
+    console.log('Datos iniciales cargados');
   } catch (error) {
     console.error('Error al inicializar la base de datos:', error);
   } finally {
@@ -87,6 +117,12 @@ async function initializeDatabase() {
 
 initializeDatabase();
 
+// Error handler middleware
+const errorHandler = (res, error, message) => {
+  console.error(message, error);
+  res.status(500).json({ error: 'Error interno del servidor', detalles: error.message });
+};
+
 // Fetch all exercises
 app.get('/ejercicios', async (req, res) => {
   try {
@@ -94,16 +130,14 @@ app.get('/ejercicios', async (req, res) => {
     console.log(`Ejercicios obtenidos: ${result.rows.length}`);
     res.json(result.rows);
   } catch (error) {
-    console.error('Error al obtener ejercicios:', error);
-    res.status(500).json({ error: 'Error interno del servidor', detalles: error.message });
+    errorHandler(res, error, 'Error al obtener ejercicios:');
   }
 });
 
 // Add a new exercise
 app.post('/ejercicios', async (req, res) => {
   const { pregunta, palabrasClave, respuestasAceptables, dificultad, categoria, pista } = req.body;
-  console.log('Datos del ejercicio recibidos:', req.body);
-
+  
   if (!pregunta || !respuestasAceptables) {
     return res.status(400).json({ error: 'La pregunta y al menos una respuesta aceptable son obligatorias' });
   }
@@ -114,12 +148,10 @@ app.post('/ejercicios', async (req, res) => {
       [pregunta, palabrasClave, respuestasAceptables, dificultad, categoria, pista]
     );
     const nuevoEjercicio = result.rows[0];
-    console.log('Nuevo ejercicio agregado:', nuevoEjercicio);
     res.status(201).json(nuevoEjercicio);
     io.emit('ejercicio_agregado', nuevoEjercicio);
   } catch (error) {
-    console.error('Error al agregar ejercicio:', error);
-    res.status(500).json({ error: 'Error interno del servidor', detalles: error.message });
+    errorHandler(res, error, 'Error al agregar ejercicio:');
   }
 });
 
@@ -127,8 +159,7 @@ app.post('/ejercicios', async (req, res) => {
 app.put('/ejercicios/:id', async (req, res) => {
   const { id } = req.params;
   const { pregunta, palabrasClave, respuestasAceptables, dificultad, categoria, pista } = req.body;
-  console.log('Actualizando ejercicio:', id, req.body);
-
+  
   if (!pregunta || !respuestasAceptables) {
     return res.status(400).json({ error: 'La pregunta y al menos una respuesta aceptable son obligatorias' });
   }
@@ -142,31 +173,26 @@ app.put('/ejercicios/:id', async (req, res) => {
       return res.status(404).json({ error: 'Ejercicio no encontrado' });
     }
     const ejercicioActualizado = result.rows[0];
-    console.log('Ejercicio actualizado:', ejercicioActualizado);
     res.json(ejercicioActualizado);
     io.emit('ejercicio_actualizado', ejercicioActualizado);
   } catch (error) {
-    console.error('Error al actualizar ejercicio:', error);
-    res.status(500).json({ error: 'Error interno del servidor', detalles: error.message });
+    errorHandler(res, error, 'Error al actualizar ejercicio:');
   }
 });
 
 // Delete an exercise
 app.delete('/ejercicios/:id', async (req, res) => {
   const { id } = req.params;
-  console.log('Eliminando ejercicio:', id);
   try {
     const result = await pool.query('DELETE FROM ejercicios WHERE id = $1 RETURNING *', [id]);
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Ejercicio no encontrado' });
     }
     const ejercicioEliminado = result.rows[0];
-    console.log('Ejercicio eliminado:', ejercicioEliminado);
     res.json(ejercicioEliminado);
     io.emit('ejercicio_eliminado', id);
   } catch (error) {
-    console.error('Error al eliminar ejercicio:', error);
-    res.status(500).json({ error: 'Error interno del servidor', detalles: error.message });
+    errorHandler(res, error, 'Error al eliminar ejercicio:');
   }
 });
 
@@ -177,7 +203,13 @@ app.post('/upload-csv', upload.single('file'), async (req, res) => {
   }
 
   const results = [];
-  fs.createReadStream(req.file.path)
+  const stream = require('stream');
+  const readStream = new stream.Readable();
+  readStream._read = () => {};
+  readStream.push(req.file.buffer);
+  readStream.push(null);
+
+  readStream
     .pipe(csv())
     .on('data', (data) => results.push(data))
     .on('end', async () => {
@@ -188,14 +220,7 @@ app.post('/upload-csv', upload.single('file'), async (req, res) => {
           if (row.pregunta && row.respuestas_aceptables) {
             await pool.query(
               'INSERT INTO ejercicios (pregunta, palabras_clave, respuestas_aceptables, dificultad, categoria, pista) VALUES ($1, $2, $3, $4, $5, $6)',
-              [
-                row.pregunta,
-                row.palabras_clave || '',
-                row.respuestas_aceptables,
-                row.dificultad,
-                row.categoria,
-                row.pista
-              ]
+              [row.pregunta, row.palabras_clave || '', row.respuestas_aceptables, row.dificultad, row.categoria, row.pista]
             );
             addedCount++;
           } else {
@@ -203,7 +228,6 @@ app.post('/upload-csv', upload.single('file'), async (req, res) => {
             console.error('Error: Ejercicio inválido', row);
           }
         }
-        fs.unlinkSync(req.file.path); // Delete the temporary file
         res.status(200).json({
           message: `CSV procesado. ${addedCount} ejercicios agregados, ${errorCount} ejercicios inválidos.`,
           addedCount,
@@ -211,8 +235,7 @@ app.post('/upload-csv', upload.single('file'), async (req, res) => {
         });
         io.emit('ejercicios_actualizados');
       } catch (error) {
-        console.error('Error processing CSV:', error);
-        res.status(500).json({ error: 'Error processing CSV', details: error.message });
+        errorHandler(res, error, 'Error processing CSV:');
       }
     });
 });
