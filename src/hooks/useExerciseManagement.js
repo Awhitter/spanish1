@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000';
 
-function useExerciseManagement() {
+function useExerciseManagement(moduleId) {
   const [ejercicios, setEjercicios] = useState([]);
   const [ejercicioActual, setEjercicioActual] = useState(null);
   const [respuestaUsuario, setRespuestaUsuario] = useState('');
@@ -11,9 +11,9 @@ function useExerciseManagement() {
   const [mostrarPista, setMostrarPista] = useState(false);
   const [error, setError] = useState(null);
 
-  const obtenerEjercicios = useCallback(async () => {
+  const obtenerEjerciciosPorModulo = useCallback(async (moduleId) => {
     try {
-      const response = await fetch(`${BACKEND_URL}/ejercicios`);
+      const response = await fetch(`${BACKEND_URL}/ejercicios?modulo=${encodeURIComponent(moduleId)}`);
       if (!response.ok) {
         throw new Error('No se pudieron obtener los ejercicios');
       }
@@ -22,7 +22,7 @@ function useExerciseManagement() {
         setEjercicios(data);
         setEjercicioActual(data[Math.floor(Math.random() * data.length)]);
       } else {
-        setError('No hay ejercicios disponibles. Por favor, añade algunos ejercicios en la página de administración.');
+        setError('No hay ejercicios disponibles en este módulo. Por favor, añade algunos ejercicios en la página de administración.');
       }
     } catch (error) {
       setError('Error al cargar los ejercicios. Por favor, intente de nuevo más tarde.');
@@ -30,8 +30,10 @@ function useExerciseManagement() {
   }, []);
 
   useEffect(() => {
-    obtenerEjercicios();
-  }, [obtenerEjercicios]);
+    if (moduleId) {
+      obtenerEjerciciosPorModulo(moduleId);
+    }
+  }, [moduleId, obtenerEjerciciosPorModulo]);
 
   const verificarRespuesta = useCallback(() => {
     if (!ejercicioActual || !ejercicioActual.respuestas_aceptables) {
@@ -61,13 +63,18 @@ function useExerciseManagement() {
   }, [ejercicioActual, respuestaUsuario]);
 
   const siguienteEjercicio = useCallback(() => {
-    const siguienteEjercicio = ejercicios[Math.floor(Math.random() * ejercicios.length)];
-    setEjercicioActual(siguienteEjercicio);
+    const ejerciciosRestantes = ejercicios.filter(ej => ej.id !== ejercicioActual.id);
+    if (ejerciciosRestantes.length > 0) {
+      const siguienteEjercicio = ejerciciosRestantes[Math.floor(Math.random() * ejerciciosRestantes.length)];
+      setEjercicioActual(siguienteEjercicio);
+    } else {
+      setEjercicioActual(null);
+    }
     setRespuestaUsuario('');
     setRetroalimentacion('');
     setMostrarPista(false);
     setError(null);
-  }, [ejercicios]);
+  }, [ejercicios, ejercicioActual]);
 
   const manejarSaltar = useCallback(() => {
     setEstadisticas(prev => ({ ...prev, saltadas: prev.saltadas + 1 }));
@@ -78,10 +85,17 @@ function useExerciseManagement() {
 
   const reiniciarQuiz = useCallback(() => {
     setEstadisticas({ correctas: 0, incorrectas: 0, saltadas: 0 });
-    siguienteEjercicio();
-  }, [siguienteEjercicio]);
+    if (ejercicios.length > 0) {
+      setEjercicioActual(ejercicios[Math.floor(Math.random() * ejercicios.length)]);
+    }
+    setRespuestaUsuario('');
+    setRetroalimentacion('');
+    setMostrarPista(false);
+    setError(null);
+  }, [ejercicios]);
 
   return {
+    ejercicios,
     ejercicioActual,
     respuestaUsuario,
     retroalimentacion,
@@ -94,6 +108,7 @@ function useExerciseManagement() {
     manejarSaltar,
     manejarMostrarPista,
     reiniciarQuiz,
+    obtenerEjerciciosPorModulo,
   };
 }
 

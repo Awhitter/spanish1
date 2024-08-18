@@ -53,7 +53,8 @@ async function initializeDatabase() {
         respuestas_aceptables TEXT,
         dificultad TEXT,
         categoria TEXT,
-        pista TEXT
+        pista TEXT,
+        modulo TEXT
       )
     `);
     console.log('Tabla de ejercicios creada');
@@ -65,7 +66,8 @@ async function initializeDatabase() {
         respuestas_aceptables: 'amarillos',
         dificultad: 'fácil',
         categoria: 'colores',
-        pista: 'Es el color del sol.'
+        pista: 'Es el color del sol.',
+        modulo: 'Módulo 1'
       },
       {
         pregunta: '¿Cómo se dice "red" en español?',
@@ -73,7 +75,8 @@ async function initializeDatabase() {
         respuestas_aceptables: 'rojo',
         dificultad: 'fácil',
         categoria: 'colores',
-        pista: 'Es el color de la sangre.'
+        pista: 'Es el color de la sangre.',
+        modulo: 'Módulo 1'
       },
       {
         pregunta: 'Complete: El cielo es _______.',
@@ -81,7 +84,8 @@ async function initializeDatabase() {
         respuestas_aceptables: 'azul',
         dificultad: 'fácil',
         categoria: 'colores',
-        pista: 'Es el color del mar también.'
+        pista: 'Es el color del mar también.',
+        modulo: 'Módulo 2'
       },
       {
         pregunta: '¿Cuál es el color de la hierba?',
@@ -89,7 +93,8 @@ async function initializeDatabase() {
         respuestas_aceptables: 'verde',
         dificultad: 'fácil',
         categoria: 'colores',
-        pista: 'Es el color de las hojas de los árboles.'
+        pista: 'Es el color de las hojas de los árboles.',
+        modulo: 'Módulo 2'
       },
       {
         pregunta: 'Complete: La nieve es _______.',
@@ -97,14 +102,15 @@ async function initializeDatabase() {
         respuestas_aceptables: 'blanca',
         dificultad: 'fácil',
         categoria: 'colores',
-        pista: 'Es el color opuesto al negro.'
+        pista: 'Es el color opuesto al negro.',
+        modulo: 'Módulo 3'
       }
     ];
 
     for (const ejercicio of seedData) {
       await client.query(
-        'INSERT INTO ejercicios (pregunta, palabras_clave, respuestas_aceptables, dificultad, categoria, pista) VALUES ($1, $2, $3, $4, $5, $6)',
-        [ejercicio.pregunta, ejercicio.palabras_clave, ejercicio.respuestas_aceptables, ejercicio.dificultad, ejercicio.categoria, ejercicio.pista]
+        'INSERT INTO ejercicios (pregunta, palabras_clave, respuestas_aceptables, dificultad, categoria, pista, modulo) VALUES ($1, $2, $3, $4, $5, $6, $7)',
+        [ejercicio.pregunta, ejercicio.palabras_clave, ejercicio.respuestas_aceptables, ejercicio.dificultad, ejercicio.categoria, ejercicio.pista, ejercicio.modulo]
       );
     }
     console.log('Datos iniciales cargados');
@@ -123,28 +129,45 @@ const errorHandler = (res, error, message) => {
   res.status(500).json({ error: 'Error interno del servidor', detalles: error.message });
 };
 
-// Fetch all exercises
-app.get('/ejercicios', async (req, res) => {
+// Add a new endpoint to get all modules
+app.get('/modulos', async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM ejercicios');
+    const result = await pool.query('SELECT DISTINCT modulo FROM ejercicios ORDER BY modulo');
+    res.json(result.rows.map(row => row.modulo));
+  } catch (error) {
+    errorHandler(res, error, 'Error al obtener módulos:');
+  }
+});
+
+// Update the existing /ejercicios endpoint to support module filtering
+app.get('/ejercicios', async (req, res) => {
+  const { modulo } = req.query;
+  try {
+    let query = 'SELECT * FROM ejercicios';
+    const params = [];
+    if (modulo) {
+      query += ' WHERE modulo = $1';
+      params.push(modulo);
+    }
+    const result = await pool.query(query, params);
     res.json(result.rows);
   } catch (error) {
     errorHandler(res, error, 'Error al obtener ejercicios:');
   }
 });
 
-// Add a new exercise
+// Update the existing POST /ejercicios endpoint to include the module
 app.post('/ejercicios', async (req, res) => {
-  const { pregunta, palabras_clave, respuestas_aceptables, dificultad, categoria, pista } = req.body;
+  const { pregunta, palabras_clave, respuestas_aceptables, dificultad, categoria, pista, modulo } = req.body;
   
-  if (!pregunta || !respuestas_aceptables) {
-    return res.status(400).json({ error: 'La pregunta y al menos una respuesta aceptable son obligatorias' });
+  if (!pregunta || !respuestas_aceptables || !modulo) {
+    return res.status(400).json({ error: 'La pregunta, al menos una respuesta aceptable, y el módulo son obligatorios' });
   }
 
   try {
     const result = await pool.query(
-      'INSERT INTO ejercicios (pregunta, palabras_clave, respuestas_aceptables, dificultad, categoria, pista) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
-      [pregunta, palabras_clave, respuestas_aceptables, dificultad, categoria, pista]
+      'INSERT INTO ejercicios (pregunta, palabras_clave, respuestas_aceptables, dificultad, categoria, pista, modulo) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
+      [pregunta, palabras_clave, respuestas_aceptables, dificultad, categoria, pista, modulo]
     );
     const nuevoEjercicio = result.rows[0];
     res.status(201).json(nuevoEjercicio);
@@ -157,16 +180,16 @@ app.post('/ejercicios', async (req, res) => {
 // Update an exercise
 app.put('/ejercicios/:id', async (req, res) => {
   const { id } = req.params;
-  const { pregunta, palabras_clave, respuestas_aceptables, dificultad, categoria, pista } = req.body;
+  const { pregunta, palabras_clave, respuestas_aceptables, dificultad, categoria, pista, modulo } = req.body;
   
-  if (!pregunta || !respuestas_aceptables) {
-    return res.status(400).json({ error: 'La pregunta y al menos una respuesta aceptable son obligatorias' });
+  if (!pregunta || !respuestas_aceptables || !modulo) {
+    return res.status(400).json({ error: 'La pregunta, al menos una respuesta aceptable, y el módulo son obligatorios' });
   }
 
   try {
     const result = await pool.query(
-      'UPDATE ejercicios SET pregunta = $1, palabras_clave = $2, respuestas_aceptables = $3, dificultad = $4, categoria = $5, pista = $6 WHERE id = $7 RETURNING *',
-      [pregunta, palabras_clave, respuestas_aceptables, dificultad, categoria, pista, id]
+      'UPDATE ejercicios SET pregunta = $1, palabras_clave = $2, respuestas_aceptables = $3, dificultad = $4, categoria = $5, pista = $6, modulo = $7 WHERE id = $8 RETURNING *',
+      [pregunta, palabras_clave, respuestas_aceptables, dificultad, categoria, pista, modulo, id]
     );
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Ejercicio no encontrado' });
@@ -216,10 +239,10 @@ app.post('/upload-csv', upload.single('file'), async (req, res) => {
         let addedCount = 0;
         let errorCount = 0;
         for (const row of results) {
-          if (row.pregunta && row.respuestas_aceptables) {
+          if (row.pregunta && row.respuestas_aceptables && row.modulo) {
             await pool.query(
-              'INSERT INTO ejercicios (pregunta, palabras_clave, respuestas_aceptables, dificultad, categoria, pista) VALUES ($1, $2, $3, $4, $5, $6)',
-              [row.pregunta, row.palabras_clave || '', row.respuestas_aceptables, row.dificultad, row.categoria, row.pista]
+              'INSERT INTO ejercicios (pregunta, palabras_clave, respuestas_aceptables, dificultad, categoria, pista, modulo) VALUES ($1, $2, $3, $4, $5, $6, $7)',
+              [row.pregunta, row.palabras_clave || '', row.respuestas_aceptables, row.dificultad, row.categoria, row.pista, row.modulo]
             );
             addedCount++;
           } else {

@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Route, Routes, Link } from 'react-router-dom';
 import './App.css';
 import EjerciciosEspanol from './components/EjerciciosEspanol';
 import AdminPage from './components/AdminPage';
+import ModuleSelection from './components/ModuleSelection';
 
 export const DarkModeContext = createContext();
 
@@ -35,7 +36,8 @@ function App() {
           </header>
           <main className="App-main">
             <Routes>
-              <Route path="/" element={<EjerciciosEspanol />} />
+              <Route path="/" element={<ModuleSelection />} />
+              <Route path="/module/:moduleId" element={<EjerciciosEspanol />} />
               <Route path="/admin" element={<AdminPage />} />
             </Routes>
           </main>

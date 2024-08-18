@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useContext, useMemo } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { CSSTransition } from 'react-transition-group';
 import { DarkModeContext } from '../App';
 import useExerciseManagement from '../hooks/useExerciseManagement';
@@ -6,6 +7,9 @@ import './EjerciciosEspanol.css';
 
 function EjerciciosEspanol() {
   const { darkMode } = useContext(DarkModeContext);
+  const { moduleId } = useParams();
+  const navigate = useNavigate();
+
   const {
     ejercicioActual,
     respuestaUsuario,
@@ -19,14 +23,27 @@ function EjerciciosEspanol() {
     manejarSaltar,
     manejarMostrarPista,
     reiniciarQuiz,
-  } = useExerciseManagement();
+    obtenerEjerciciosPorModulo,
+    ejercicios,
+  } = useExerciseManagement(moduleId);
 
   const [animacionSalida, setAnimacionSalida] = useState(false);
+  const [moduleComplete, setModuleComplete] = useState(false);
+
+  useEffect(() => {
+    obtenerEjerciciosPorModulo(moduleId);
+  }, [moduleId, obtenerEjerciciosPorModulo]);
 
   const progreso = useMemo(() => {
     const total = estadisticas.correctas + estadisticas.incorrectas + estadisticas.saltadas;
-    return total > 0 ? (total / (total + 1)) * 100 : 0;
-  }, [estadisticas]);
+    return total > 0 ? (total / ejercicios.length) * 100 : 0;
+  }, [estadisticas, ejercicios.length]);
+
+  useEffect(() => {
+    if (progreso === 100) {
+      setModuleComplete(true);
+    }
+  }, [progreso]);
 
   const manejarEnvio = useCallback((e) => {
     e.preventDefault();
@@ -68,8 +85,20 @@ function EjerciciosEspanol() {
     return <div className="loading">Cargando ejercicios...</div>;
   }
 
+  if (moduleComplete) {
+    return (
+      <div className="module-complete">
+        <h2>¡Felicidades!</h2>
+        <p>Has completado todos los ejercicios en este módulo.</p>
+        <button onClick={() => navigate('/')} className="btn btn-primary">Volver al inicio</button>
+        <button onClick={reiniciarQuiz} className="btn btn-secondary">Reiniciar módulo</button>
+      </div>
+    );
+  }
+
   return (
     <div className={`ejercicios-espanol ${darkMode ? 'dark-mode' : ''}`}>
+      <h2>{moduleId}</h2>
       <div className="barra-progreso">
         <div className="progreso" style={{ width: `${progreso}%` }}></div>
       </div>
