@@ -35,12 +35,12 @@ function useExerciseManagement() {
   }, [obtenerEjercicios]);
 
   const verificarRespuesta = useCallback(() => {
-    if (!ejercicioActual || !ejercicioActual.respuestas_aceptables || ejercicioActual.respuestas_aceptables.length === 0) {
+    if (!ejercicioActual || !ejercicioActual.respuestas_aceptables) {
       setError('Error: El ejercicio actual no es válido. Por favor, contacte al administrador.');
       return;
     }
 
-    const respuestasAceptables = ejercicioActual.respuestas_aceptables;
+    const respuestasAceptables = ejercicioActual.respuestas_aceptables.split(',').map(r => r.trim());
 
     const respuestaUsuarioNormalizada = respuestaUsuario.toLowerCase().trim();
     const respuestasAceptablesNormalizadas = respuestasAceptables.map(respuesta => 

@@ -62,13 +62,13 @@ async function initializeDatabase() {
     );
     
     if (!tableExists.rows[0].exists) {
-      // Create the ejercicios table
+      // Create the ejercicios table with TEXT fields for palabras_clave and respuestas_aceptables
       await client.query(`
         CREATE TABLE ejercicios (
           id SERIAL PRIMARY KEY,
           pregunta TEXT NOT NULL,
-          palabras_clave TEXT[],
-          respuestas_aceptables TEXT[],
+          palabras_clave TEXT,
+          respuestas_aceptables TEXT,
           dificultad TEXT,
           categoria TEXT,
           pista TEXT
@@ -81,7 +81,14 @@ async function initializeDatabase() {
       for (const ejercicio of seedData) {
         await client.query(
           'INSERT INTO ejercicios (pregunta, palabras_clave, respuestas_aceptables, dificultad, categoria, pista) VALUES ($1, $2, $3, $4, $5, $6)',
-          [ejercicio.pregunta, ejercicio.keywords, ejercicio.acceptableAnswers, ejercicio.difficulty, ejercicio.category, ejercicio.hint]
+          [
+            ejercicio.pregunta,
+            ejercicio.keywords ? ejercicio.keywords.join(', ') : '',
+            ejercicio.acceptableAnswers ? ejercicio.acceptableAnswers.join(', ') : '',
+            ejercicio.difficulty,
+            ejercicio.category,
+            ejercicio.hint
+          ]
         );
       }
       console.log('Datos iniciales cargados');
@@ -100,7 +107,7 @@ initializeDatabase();
 // Fetch all exercises
 app.get('/ejercicios', async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM ejercicios WHERE array_length(respuestas_aceptables, 1) > 0');
+    const result = await pool.query('SELECT * FROM ejercicios');
     console.log(`Ejercicios obtenidos: ${result.rows.length}`);
     res.json(result.rows);
   } catch (error) {
@@ -114,7 +121,7 @@ app.post('/ejercicios', async (req, res) => {
   const { pregunta, palabrasClave, respuestasAceptables, dificultad, categoria, pista } = req.body;
   console.log('Datos del ejercicio recibidos:', req.body);
 
-  if (!pregunta || !respuestasAceptables || respuestasAceptables.length === 0) {
+  if (!pregunta || !respuestasAceptables) {
     return res.status(400).json({ error: 'La pregunta y al menos una respuesta aceptable son obligatorias' });
   }
 
@@ -139,7 +146,7 @@ app.put('/ejercicios/:id', async (req, res) => {
   const { pregunta, palabrasClave, respuestasAceptables, dificultad, categoria, pista } = req.body;
   console.log('Actualizando ejercicio:', id, req.body);
 
-  if (!pregunta || !respuestasAceptables || respuestasAceptables.length === 0) {
+  if (!pregunta || !respuestasAceptables) {
     return res.status(400).json({ error: 'La pregunta y al menos una respuesta aceptable son obligatorias' });
   }
 
@@ -195,14 +202,13 @@ app.post('/upload-csv', upload.single('file'), async (req, res) => {
         let addedCount = 0;
         let errorCount = 0;
         for (const row of results) {
-          const respuestasAceptables = row.respuestas_aceptables ? row.respuestas_aceptables.split(',').map(a => a.trim()) : [];
-          if (row.pregunta && respuestasAceptables.length > 0) {
+          if (row.pregunta && row.respuestas_aceptables) {
             await pool.query(
               'INSERT INTO ejercicios (pregunta, palabras_clave, respuestas_aceptables, dificultad, categoria, pista) VALUES ($1, $2, $3, $4, $5, $6)',
               [
                 row.pregunta,
-                row.palabras_clave ? row.palabras_clave.split(',').map(k => k.trim()) : [],
-                respuestasAceptables,
+                row.palabras_clave || '',
+                row.respuestas_aceptables,
                 row.dificultad,
                 row.categoria,
                 row.pista

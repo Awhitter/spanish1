@@ -70,7 +70,6 @@ function EjerciciosEspanol() {
 
   return (
     <div className={`ejercicios-espanol ${darkMode ? 'dark-mode' : ''}`}>
-      <h2>Ejercicios de Español</h2>
       <div className="barra-progreso">
         <div className="progreso" style={{ width: `${progreso}%` }}></div>
       </div>
