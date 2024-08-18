@@ -30,7 +30,7 @@ function App() {
               <Link to="/" className="nav-link">Inicio</Link>
               <Link to="/admin" className="nav-link">Admin</Link>
             </nav>
-            <button onClick={toggleDarkMode} className="toggle-dark-mode" aria-label="Toggle dark mode">
+            <button onClick={toggleDarkMode} className="toggle-dark-mode" aria-label="Cambiar modo oscuro">
               {darkMode ? '☀️' : '🌙'}
             </button>
           </header>

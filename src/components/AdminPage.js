@@ -15,6 +15,7 @@ function AdminPage() {
   const [editingId, setEditingId] = useState(null);
   const [file, setFile] = useState(null);
   const [message, setMessage] = useState('');
+  const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
     fetchEjercicios();
@@ -63,6 +64,7 @@ function AdminPage() {
         setMessage(editingId ? 'Ejercicio actualizado con éxito' : 'Ejercicio agregado con éxito');
         clearForm();
         fetchEjercicios();
+        setShowModal(false);
       } else {
         setMessage('Error al procesar el ejercicio');
       }
@@ -99,6 +101,7 @@ function AdminPage() {
     setCategoria(ejercicio.categoria);
     setPista(ejercicio.pista);
     setModulo(ejercicio.modulo);
+    setShowModal(true);
   };
 
   const clearForm = () => {
@@ -149,68 +152,77 @@ function AdminPage() {
     <div className="admin-page">
       <h2>Administración de Ejercicios</h2>
       {message && <p className="message">{message}</p>}
-      <form onSubmit={handleSubmit} className="exercise-form">
-        <textarea
-          value={pregunta}
-          onChange={(e) => setPregunta(e.target.value)}
-          placeholder="Pregunta"
-          required
-          rows="3"
-        />
-        <input
-          type="text"
-          value={palabrasClave}
-          onChange={(e) => setPalabrasClave(e.target.value)}
-          placeholder="Palabras clave (separadas por comas)"
-        />
-        <input
-          type="text"
-          value={respuestasAceptables}
-          onChange={(e) => setRespuestasAceptables(e.target.value)}
-          placeholder="Respuestas aceptables (separadas por comas)"
-          required
-        />
-        <select
-          value={dificultad}
-          onChange={(e) => setDificultad(e.target.value)}
-          required
-        >
-          <option value="">Selecciona la dificultad</option>
-          <option value="fácil">Fácil</option>
-          <option value="medio">Medio</option>
-          <option value="difícil">Difícil</option>
-        </select>
-        <input
-          type="text"
-          value={categoria}
-          onChange={(e) => setCategoria(e.target.value)}
-          placeholder="Categoría"
-        />
-        <input
-          type="text"
-          value={pista}
-          onChange={(e) => setPista(e.target.value)}
-          placeholder="Pista"
-        />
-        <input
-          type="text"
-          value={modulo}
-          onChange={(e) => setModulo(e.target.value)}
-          placeholder="Módulo"
-          required
-        />
-        <button type="submit">{editingId ? 'Actualizar' : 'Agregar'} Ejercicio</button>
-        {editingId && (
-          <button type="button" onClick={clearForm}>Cancelar Edición</button>
-        )}
-      </form>
+      <button onClick={() => setShowModal(true)} className="btn btn-primary">Agregar Ejercicio</button>
+      
+      {showModal && (
+        <div className="modal">
+          <div className="modal-content">
+            <h3>{editingId ? 'Editar Ejercicio' : 'Agregar Ejercicio'}</h3>
+            <form onSubmit={handleSubmit} className="exercise-form">
+              <textarea
+                value={pregunta}
+                onChange={(e) => setPregunta(e.target.value)}
+                placeholder="Pregunta"
+                required
+                rows="3"
+              />
+              <input
+                type="text"
+                value={palabrasClave}
+                onChange={(e) => setPalabrasClave(e.target.value)}
+                placeholder="Palabras clave (separadas por comas)"
+              />
+              <input
+                type="text"
+                value={respuestasAceptables}
+                onChange={(e) => setRespuestasAceptables(e.target.value)}
+                placeholder="Respuestas aceptables (separadas por comas)"
+                required
+              />
+              <select
+                value={dificultad}
+                onChange={(e) => setDificultad(e.target.value)}
+                required
+              >
+                <option value="">Selecciona la dificultad</option>
+                <option value="fácil">Fácil</option>
+                <option value="medio">Medio</option>
+                <option value="difícil">Difícil</option>
+              </select>
+              <input
+                type="text"
+                value={categoria}
+                onChange={(e) => setCategoria(e.target.value)}
+                placeholder="Categoría"
+              />
+              <input
+                type="text"
+                value={pista}
+                onChange={(e) => setPista(e.target.value)}
+                placeholder="Pista"
+              />
+              <input
+                type="text"
+                value={modulo}
+                onChange={(e) => setModulo(e.target.value)}
+                placeholder="Módulo"
+                required
+              />
+              <div className="modal-actions">
+                <button type="submit" className="btn btn-primary">{editingId ? 'Actualizar' : 'Agregar'} Ejercicio</button>
+                <button type="button" onClick={() => setShowModal(false)} className="btn btn-secondary">Cancelar</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       <div className="csv-upload">
         <h3>Subir archivo CSV</h3>
         <p>El archivo CSV debe tener las siguientes columnas: pregunta, palabras_clave, respuestas_aceptables, dificultad, categoria, pista, modulo</p>
         <form onSubmit={handleFileUpload} className="file-upload-form">
           <input type="file" onChange={handleFileChange} accept=".csv" />
-          <button type="submit">Subir CSV</button>
+          <button type="submit" className="btn btn-primary">Subir CSV</button>
         </form>
       </div>
 
@@ -226,8 +238,8 @@ function AdminPage() {
             <p><strong>Pista:</strong> {ejercicio.pista}</p>
             <p><strong>Última actualización:</strong> {new Date(ejercicio.updated_at).toLocaleString()}</p>
             <div className="exercise-actions">
-              <button onClick={() => handleEdit(ejercicio)}>Editar</button>
-              <button onClick={() => handleDelete(ejercicio.id)}>Eliminar</button>
+              <button onClick={() => handleEdit(ejercicio)} className="btn btn-secondary">Editar</button>
+              <button onClick={() => handleDelete(ejercicio.id)} className="btn btn-danger">Eliminar</button>
             </div>
           </div>
         ))}

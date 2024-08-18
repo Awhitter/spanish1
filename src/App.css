@@ -1,37 +1,28 @@
-@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap');
-
 :root {
-  --primary-color: #3498db;
-  --secondary-color: #2ecc71;
-  --background-color: #f8f9fa;
+  --bg-color: #f0f0f0;
   --text-color: #333;
-  --header-bg: #2c3e50;
-  --header-text: #ecf0f1;
+  --header-bg: #3498db;
+  --header-text: #fff;
   --footer-bg: #34495e;
-  --footer-text: #bdc3c7;
-  --shadow-color: rgba(0, 0, 0, 0.1);
+  --footer-text: #fff;
 }
 
 .dark-mode {
-  --primary-color: #4da8da;
-  --secondary-color: #52be80;
-  --background-color: #121212;
+  --bg-color: #333;
   --text-color: #f0f0f0;
-  --header-bg: #1a1a1a;
-  --header-text: #ffffff;
-  --footer-bg: #1a1a1a;
-  --footer-text: #bdc3c7;
-  --shadow-color: rgba(255, 255, 255, 0.1);
+  --header-bg: #2980b9;
+  --header-text: #fff;
+  --footer-bg: #2c3e50;
+  --footer-text: #fff;
 }
 
 body {
+  font-family: Arial, sans-serif;
   margin: 0;
   padding: 0;
-  font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
-  background-color: var(--background-color);
+  background-color: var(--bg-color);
   color: var(--text-color);
   transition: background-color 0.3s ease, color 0.3s ease;
-  line-height: 1.6;
 }
 
 .App {
@@ -44,122 +35,74 @@ body {
   background-color: var(--header-bg);
   padding: 20px;
   color: var(--header-text);
-  text-align: center;
-  position: relative;
-  box-shadow: 0 2px 4px var(--shadow-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .fancy-title {
-  font-size: 2.5rem;
-  margin-bottom: 20px;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-  font-weight: 700;
-  letter-spacing: 1px;
+  font-size: 24px;
+  margin: 0;
 }
 
 .nav-menu {
   display: flex;
-  justify-content: center;
-  margin-top: 20px;
+  gap: 20px;
 }
 
 .nav-link {
   color: var(--header-text);
   text-decoration: none;
-  margin: 0 15px;
-  font-size: 1.2rem;
-  transition: color 0.3s ease, transform 0.3s ease;
-  position: relative;
+  font-weight: bold;
 }
 
-.nav-link::after {
-  content: '';
-  position: absolute;
-  width: 100%;
-  height: 2px;
-  bottom: -5px;
-  left: 0;
-  background-color: var(--secondary-color);
-  transform: scaleX(0);
-  transition: transform 0.3s ease;
-}
-
-.nav-link:hover {
-  color: var(--secondary-color);
-  transform: translateY(-2px);
-}
-
-.nav-link:hover::after {
-  transform: scaleX(1);
+.toggle-dark-mode {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 24px;
 }
 
 .App-main {
   flex-grow: 1;
-  padding: 40px 20px;
-  max-width: 800px;
+  padding: 20px;
+  max-width: 1200px;
   margin: 0 auto;
   width: 100%;
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }
 
 .App-footer {
   background-color: var(--footer-bg);
   color: var(--footer-text);
   text-align: center;
-  padding: 15px;
-  font-size: 0.9rem;
-  box-shadow: 0 -2px 4px var(--shadow-color);
+  padding: 10px;
+  margin-top: auto;
 }
 
-.toggle-dark-mode {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  background: none;
-  border: none;
-  font-size: 24px;
-  cursor: pointer;
-  color: var(--header-text);
-  transition: transform 0.3s ease, opacity 0.3s ease;
-  opacity: 0.8;
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
-.toggle-dark-mode:hover {
-  transform: scale(1.1) rotate(15deg);
-  opacity: 1;
+.App-main {
+  animation: fadeIn 0.5s ease-in-out;
 }
 
+/* Responsive design */
 @media (max-width: 768px) {
-  .fancy-title {
-    font-size: 2rem;
+  .App-header {
+    flex-direction: column;
+    align-items: flex-start;
   }
 
   .nav-menu {
-    flex-direction: column;
-  }
-
-  .nav-link {
-    margin: 10px 0;
+    margin-top: 10px;
   }
 
   .toggle-dark-mode {
-    top: 10px;
-    right: 10px;
-    font-size: 20px;
-  }
-
-  .App-main {
-    padding: 20px 10px;
+    position: absolute;
+    top: 20px;
+    right: 20px;
   }
 }
