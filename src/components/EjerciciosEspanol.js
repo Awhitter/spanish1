@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { CSSTransition } from 'react-transition-group';
 import './EjerciciosEspanol.css';
 
@@ -12,12 +12,10 @@ function EjerciciosEspanol() {
   const [estadisticas, setEstadisticas] = useState({ correctas: 0, incorrectas: 0, saltadas: 0 });
   const [mostrarPista, setMostrarPista] = useState(false);
   const [animacionSalida, setAnimacionSalida] = useState(false);
+  const [modoOscuro, setModoOscuro] = useState(false);
+  const [progreso, setProgreso] = useState(0);
 
-  useEffect(() => {
-    obtenerEjercicios();
-  }, []);
-
-  const obtenerEjercicios = async () => {
+  const obtenerEjercicios = useCallback(async () => {
     try {
       const response = await fetch(`${BACKEND_URL}/ejercicios`);
       if (!response.ok) {
@@ -31,14 +29,19 @@ function EjerciciosEspanol() {
     } catch (error) {
       console.error('Error al obtener ejercicios:', error);
     }
-  };
+  }, []);
 
-  const manejarEnvio = (e) => {
-    e.preventDefault();
-    verificarRespuesta();
-  };
+  useEffect(() => {
+    obtenerEjercicios();
+  }, [obtenerEjercicios]);
 
-  const verificarRespuesta = () => {
+  useEffect(() => {
+    if (ejercicios.length > 0) {
+      setProgreso((estadisticas.correctas + estadisticas.incorrectas + estadisticas.saltadas) / ejercicios.length * 100);
+    }
+  }, [estadisticas, ejercicios]);
+
+  const verificarRespuesta = useCallback(() => {
     if (ejercicioActual.respuestas_aceptables.includes(respuestaUsuario.toLowerCase().trim())) {
       setRetroalimentacion('¡Correcto!');
       setEstadisticas(prev => ({ ...prev, correctas: prev.correctas + 1 }));
@@ -46,14 +49,14 @@ function EjerciciosEspanol() {
       setRetroalimentacion(`Incorrecto. La respuesta correcta es: ${ejercicioActual.respuestas_aceptables.join(' o ')}`);
       setEstadisticas(prev => ({ ...prev, incorrectas: prev.incorrectas + 1 }));
     }
-  };
+  }, [ejercicioActual, respuestaUsuario]);
 
-  const manejarSaltar = () => {
-    setEstadisticas(prev => ({ ...prev, saltadas: prev.saltadas + 1 }));
-    siguienteEjercicio();
-  };
+  const manejarEnvio = useCallback((e) => {
+    e.preventDefault();
+    verificarRespuesta();
+  }, [verificarRespuesta]);
 
-  const siguienteEjercicio = () => {
+  const siguienteEjercicio = useCallback(() => {
     setAnimacionSalida(true);
     setTimeout(() => {
       const siguienteEjercicio = ejercicios[Math.floor(Math.random() * ejercicios.length)];
@@ -63,24 +66,58 @@ function EjerciciosEspanol() {
       setMostrarPista(false);
       setAnimacionSalida(false);
     }, 300);
-  };
+  }, [ejercicios]);
 
-  const manejarMostrarPista = () => {
+  const manejarSaltar = useCallback(() => {
+    setEstadisticas(prev => ({ ...prev, saltadas: prev.saltadas + 1 }));
+    siguienteEjercicio();
+  }, [siguienteEjercicio]);
+
+  const manejarMostrarPista = useCallback(() => {
     setMostrarPista(true);
-  };
+  }, []);
 
-  const reiniciarQuiz = () => {
+  const reiniciarQuiz = useCallback(() => {
     setEstadisticas({ correctas: 0, incorrectas: 0, saltadas: 0 });
     siguienteEjercicio();
-  };
+  }, [siguienteEjercicio]);
+
+  const manejarTeclas = useCallback((e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      verificarRespuesta();
+    } else if (e.key === 'ArrowRight') {
+      siguienteEjercicio();
+    } else if (e.key === ' ') {
+      e.preventDefault();
+      manejarMostrarPista();
+    }
+  }, [verificarRespuesta, siguienteEjercicio, manejarMostrarPista]);
+
+  useEffect(() => {
+    document.addEventListener('keydown', manejarTeclas);
+    return () => {
+      document.removeEventListener('keydown', manejarTeclas);
+    };
+  }, [manejarTeclas]);
+
+  const toggleModoOscuro = useCallback(() => {
+    setModoOscuro(prev => !prev);
+  }, []);
 
   if (!ejercicioActual) {
     return <div>Cargando ejercicios...</div>;
   }
 
   return (
-    <div className="ejercicios-espanol">
+    <div className={`ejercicios-espanol ${modoOscuro ? 'modo-oscuro' : ''}`}>
       <h2>Ejercicios de Español</h2>
+      <button onClick={toggleModoOscuro} className="toggle-modo-oscuro">
+        {modoOscuro ? '☀️' : '🌙'}
+      </button>
+      <div className="barra-progreso">
+        <div className="progreso" style={{ width: `${progreso}%` }}></div>
+      </div>
       <CSSTransition
         in={!animacionSalida}
         timeout={300}
@@ -96,6 +133,7 @@ function EjerciciosEspanol() {
               value={respuestaUsuario}
               onChange={(e) => setRespuestaUsuario(e.target.value)}
               placeholder="Tu respuesta"
+              autoFocus
             />
             <button type="submit" className="btn btn-primary">Verificar</button>
           </form>
@@ -108,11 +146,22 @@ function EjerciciosEspanol() {
             <button onClick={reiniciarQuiz} className="btn btn-warning">Reiniciar Quiz</button>
           </div>
           {mostrarPista && <p className="pista">{ejercicioActual.pista}</p>}
-          {retroalimentacion && <p className="retroalimentacion">{retroalimentacion}</p>}
+          {retroalimentacion && (
+            <CSSTransition
+              in={!!retroalimentacion}
+              timeout={300}
+              classNames="feedback"
+              unmountOnExit
+            >
+              <p className={`retroalimentacion ${retroalimentacion.startsWith('¡Correcto!') ? 'correcta' : 'incorrecta'}`}>
+                {retroalimentacion}
+              </p>
+            </CSSTransition>
+          )}
         </div>
       </CSSTransition>
       <div className="estadisticas">
-        <p>Ejercicio {ejercicios.indexOf(ejercicioActual) + 1} de {ejercicios.length}</p>
+        <p>Progreso: {Math.round(progreso)}%</p>
         <p>Correctas: {estadisticas.correctas}</p>
         <p>Incorrectas: {estadisticas.incorrectas}</p>
         <p>Saltadas: {estadisticas.saltadas}</p>

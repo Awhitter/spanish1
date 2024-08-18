@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import * as XLSX from 'xlsx';
 import './AdminPage.css';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000';
-const ADMIN_PASSWORD = 'hoje papa'; // Updated password
+const ADMIN_PASSWORD = 'hoje papa';
 
 function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -21,6 +21,7 @@ function AdminPage() {
   });
   const [mensajeError, setMensajeError] = useState('');
   const [mensajeExito, setMensajeExito] = useState('');
+  const [filtro, setFiltro] = useState('');
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -52,7 +53,6 @@ function AdminPage() {
         throw new Error('No se pudieron obtener los ejercicios');
       }
       const data = await response.json();
-      console.log('Ejercicios obtenidos:', data);
       setEjercicios(data);
     } catch (error) {
       console.error('Error al obtener ejercicios:', error);
@@ -75,7 +75,6 @@ function AdminPage() {
   };
 
   const agregarEjercicioAPI = async (ejercicio) => {
-    console.log('Enviando datos del ejercicio:', ejercicio);
     const response = await fetch(`${BACKEND_URL}/ejercicios`, {
       method: 'POST',
       headers: {
@@ -97,7 +96,6 @@ function AdminPage() {
     }
     try {
       const ejercicioAgregado = await agregarEjercicioAPI(nuevoEjercicio);
-      console.log('Ejercicio agregado:', ejercicioAgregado);
       setEjercicios([...ejercicios, ejercicioAgregado]);
       setNuevoEjercicio({
         pregunta: '',
@@ -116,38 +114,34 @@ function AdminPage() {
   };
 
   const manejarEditarEjercicio = (ejercicio) => {
-    setEjercicioEditando(ejercicio);
+    setEjercicioEditando({ ...ejercicio });
   };
 
-  const manejarActualizarEjercicio = async () => {
+  const manejarActualizarEjercicio = useCallback(async (ejercicioActualizado) => {
     try {
-      console.log('Actualizando ejercicio:', ejercicioEditando);
-      const response = await fetch(`${BACKEND_URL}/ejercicios/${ejercicioEditando.id}`, {
+      const response = await fetch(`${BACKEND_URL}/ejercicios/${ejercicioActualizado.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(ejercicioEditando),
+        body: JSON.stringify(ejercicioActualizado),
       });
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || 'No se pudo actualizar el ejercicio');
       }
-      const ejercicioActualizado = await response.json();
-      console.log('Ejercicio actualizado:', ejercicioActualizado);
-      setEjercicios(ejercicios.map(ej => ej.id === ejercicioActualizado.id ? ejercicioActualizado : ej));
-      setEjercicioEditando(null);
+      const ejercicioActualizadoResponse = await response.json();
+      setEjercicios(ejercicios.map(ej => ej.id === ejercicioActualizadoResponse.id ? ejercicioActualizadoResponse : ej));
       setMensajeExito('¡Ejercicio actualizado con éxito!');
       setMensajeError('');
     } catch (error) {
       console.error('Error al actualizar ejercicio:', error);
       setMensajeError(`No se pudo actualizar el ejercicio: ${error.message}`);
     }
-  };
+  }, [ejercicios]);
 
   const manejarEliminarEjercicio = async (id) => {
     try {
-      console.log('Eliminando ejercicio:', id);
       const response = await fetch(`${BACKEND_URL}/ejercicios/${id}`, {
         method: 'DELETE',
       });
@@ -201,6 +195,11 @@ function AdminPage() {
     };
     reader.readAsBinaryString(file);
   };
+
+  const ejerciciosFiltrados = ejercicios.filter(ejercicio =>
+    ejercicio.pregunta.toLowerCase().includes(filtro.toLowerCase()) ||
+    ejercicio.categoria.toLowerCase().includes(filtro.toLowerCase())
+  );
 
   if (!isAuthenticated) {
     return (
@@ -287,71 +286,64 @@ function AdminPage() {
       <input type="file" accept=".xlsx, .xls" onChange={manejarSubirArchivo} />
 
       <h3>Ejercicios Actuales</h3>
-      <ul>
-        {ejercicios.map((ejercicio) => (
-          <li key={ejercicio.id}>
+      <div className="search-container">
+        <input
+          type="text"
+          placeholder="Buscar ejercicios..."
+          value={filtro}
+          onChange={(e) => setFiltro(e.target.value)}
+        />
+      </div>
+      <ul className="ejercicios-lista">
+        {ejerciciosFiltrados.map((ejercicio) => (
+          <li key={ejercicio.id} className="ejercicio-item">
             {ejercicioEditando && ejercicioEditando.id === ejercicio.id ? (
-              <>
-                <div className="form-group">
-                  <label>Pregunta:</label>
-                  <input
-                    value={ejercicioEditando.pregunta}
-                    onChange={(e) => setEjercicioEditando({...ejercicioEditando, pregunta: e.target.value})}
-                  />
+              <div className="ejercicio-edit">
+                <input
+                  value={ejercicioEditando.pregunta}
+                  onChange={(e) => setEjercicioEditando({...ejercicioEditando, pregunta: e.target.value})}
+                  placeholder="Pregunta"
+                />
+                <input
+                  value={ejercicioEditando.respuestas_aceptables ? ejercicioEditando.respuestas_aceptables.join(', ') : ''}
+                  onChange={(e) => setEjercicioEditando({...ejercicioEditando, respuestas_aceptables: e.target.value.split(',').map(a => a.trim())})}
+                  placeholder="Respuestas Aceptables"
+                />
+                <select
+                  value={ejercicioEditando.dificultad}
+                  onChange={(e) => setEjercicioEditando({...ejercicioEditando, dificultad: e.target.value})}
+                >
+                  <option value="fácil">Fácil</option>
+                  <option value="medio">Medio</option>
+                  <option value="difícil">Difícil</option>
+                </select>
+                <input
+                  value={ejercicioEditando.categoria}
+                  onChange={(e) => setEjercicioEditando({...ejercicioEditando, categoria: e.target.value})}
+                  placeholder="Categoría"
+                />
+                <input
+                  value={ejercicioEditando.pista}
+                  onChange={(e) => setEjercicioEditando({...ejercicioEditando, pista: e.target.value})}
+                  placeholder="Pista"
+                />
+                <div className="button-group">
+                  <button onClick={() => manejarActualizarEjercicio(ejercicioEditando)}>Guardar</button>
+                  <button onClick={() => setEjercicioEditando(null)}>Cancelar</button>
                 </div>
-                <div className="form-group">
-                  <label>Palabras Clave:</label>
-                  <input
-                    value={ejercicioEditando.palabras_clave ? ejercicioEditando.palabras_clave.join(', ') : ''}
-                    onChange={(e) => setEjercicioEditando({...ejercicioEditando, palabras_clave: e.target.value.split(',').map(k => k.trim())})}
-                  />
-                </div>
-                <div className="form-group">
-                  <label>Respuestas Aceptables:</label>
-                  <input
-                    value={ejercicioEditando.respuestas_aceptables ? ejercicioEditando.respuestas_aceptables.join(', ') : ''}
-                    onChange={(e) => setEjercicioEditando({...ejercicioEditando, respuestas_aceptables: e.target.value.split(',').map(a => a.trim())})}
-                  />
-                </div>
-                <div className="form-group">
-                  <label>Dificultad:</label>
-                  <select
-                    value={ejercicioEditando.dificultad}
-                    onChange={(e) => setEjercicioEditando({...ejercicioEditando, dificultad: e.target.value})}
-                  >
-                    <option value="fácil">Fácil</option>
-                    <option value="medio">Medio</option>
-                    <option value="difícil">Difícil</option>
-                  </select>
-                </div>
-                <div className="form-group">
-                  <label>Categoría:</label>
-                  <input
-                    value={ejercicioEditando.categoria}
-                    onChange={(e) => setEjercicioEditando({...ejercicioEditando, categoria: e.target.value})}
-                  />
-                </div>
-                <div className="form-group">
-                  <label>Pista:</label>
-                  <input
-                    value={ejercicioEditando.pista}
-                    onChange={(e) => setEjercicioEditando({...ejercicioEditando, pista: e.target.value})}
-                  />
-                </div>
-                <button onClick={manejarActualizarEjercicio}>Actualizar</button>
-              </>
+              </div>
             ) : (
-              <>
-                <span>
-                  <strong>Pregunta:</strong> {ejercicio.pregunta}<br />
-                  <strong>Respuestas Aceptables:</strong> {ejercicio.respuestas_aceptables ? ejercicio.respuestas_aceptables.join(', ') : ''}<br />
-                  <strong>Dificultad:</strong> {ejercicio.dificultad}<br />
-                  <strong>Categoría:</strong> {ejercicio.categoria}<br />
-                  <strong>Pista:</strong> {ejercicio.pista}
-                </span>
-                <button onClick={() => manejarEditarEjercicio(ejercicio)}>Editar</button>
-                <button onClick={() => manejarEliminarEjercicio(ejercicio.id)}>Eliminar</button>
-              </>
+              <div className="ejercicio-view">
+                <h4>{ejercicio.pregunta}</h4>
+                <p><strong>Respuestas:</strong> {ejercicio.respuestas_aceptables ? ejercicio.respuestas_aceptables.join(', ') : ''}</p>
+                <p><strong>Dificultad:</strong> {ejercicio.dificultad}</p>
+                <p><strong>Categoría:</strong> {ejercicio.categoria}</p>
+                <p><strong>Pista:</strong> {ejercicio.pista}</p>
+                <div className="button-group">
+                  <button onClick={() => manejarEditarEjercicio(ejercicio)}>Editar</button>
+                  <button onClick={() => manejarEliminarEjercicio(ejercicio.id)}>Eliminar</button>
+                </div>
+              </div>
             )}
           </li>
         ))}
