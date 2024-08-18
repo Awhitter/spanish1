@@ -149,6 +149,11 @@ app.get('/modulos', async (req, res) => {
   }
 });
 
+// Add welcome message endpoint
+app.get('/welcome-message', (req, res) => {
+  res.json({ message: "¡Bienvenidos a los ejercicios de español de Alejandra! Este es un experimento de IA para ayudar a enseñar español. Haz clic en uno de los módulos a continuación para comenzar. ¡Disfruta!" });
+});
+
 // Update the existing /ejercicios endpoint to support module filtering
 app.get('/ejercicios', async (req, res) => {
   const { modulo } = req.query;

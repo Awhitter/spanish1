@@ -1,7 +1,7 @@
 :root {
   --bg-color: #f0f0f0;
   --text-color: #333;
-  --header-bg: #3498db;
+  --header-bg: linear-gradient(135deg, #3498db, #2980b9);
   --header-text: #fff;
   --footer-bg: #34495e;
   --footer-text: #fff;
@@ -15,7 +15,7 @@
 .dark-mode {
   --bg-color: #333;
   --text-color: #f0f0f0;
-  --header-bg: #2980b9;
+  --header-bg: linear-gradient(135deg, #2980b9, #1a5276);
   --header-text: #fff;
   --footer-bg: #2c3e50;
   --footer-text: #fff;
@@ -27,7 +27,7 @@
 }
 
 body {
-  font-family: Arial, sans-serif;
+  font-family: 'Roboto', Arial, sans-serif;
   margin: 0;
   padding: 0;
   background-color: var(--bg-color);
@@ -42,17 +42,20 @@ body {
 }
 
 .App-header {
-  background-color: var(--header-bg);
+  background: var(--header-bg);
   padding: 20px;
   color: var(--header-text);
   display: flex;
   justify-content: space-between;
   align-items: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .fancy-title {
-  font-size: 24px;
+  font-size: 28px;
   margin: 0;
+  font-weight: bold;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .nav-menu {
@@ -64,6 +67,12 @@ body {
   color: var(--header-text);
   text-decoration: none;
   font-weight: bold;
+  font-size: 16px;
+  transition: opacity 0.3s ease;
+}
+
+.nav-link:hover {
+  opacity: 0.8;
 }
 
 .toggle-dark-mode {
@@ -71,11 +80,16 @@ body {
   border: none;
   cursor: pointer;
   font-size: 24px;
+  transition: transform 0.3s ease;
+}
+
+.toggle-dark-mode:hover {
+  transform: scale(1.1);
 }
 
 .App-main {
   flex-grow: 1;
-  padding: 20px;
+  padding: 40px 20px;
   max-width: 1200px;
   margin: 0 auto;
   width: 100%;
@@ -85,7 +99,7 @@ body {
   background-color: var(--footer-bg);
   color: var(--footer-text);
   text-align: center;
-  padding: 10px;
+  padding: 15px;
   margin-top: auto;
 }
 
@@ -93,6 +107,22 @@ input[type="text"], textarea, select {
   background-color: var(--input-bg);
   border: 1px solid var(--input-border);
   color: var(--text-color);
+  padding: 10px;
+  border-radius: 4px;
+  font-size: 16px;
+}
+
+.btn {
+  padding: 10px 20px;
+  font-size: 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
 }
 
 .btn-primary {
@@ -128,7 +158,7 @@ input[type="text"], textarea, select {
   }
 
   .nav-menu {
-    margin-top: 10px;
+    margin-top: 15px;
   }
 
   .toggle-dark-mode {

@@ -8,6 +8,7 @@ function ModuleSelection() {
   const [modules, setModules] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [welcomeMessage, setWelcomeMessage] = useState('');
 
   useEffect(() => {
     fetch(`${BACKEND_URL}/modulos`)
@@ -26,6 +27,12 @@ function ModuleSelection() {
         setError('No se pudieron cargar los módulos. Por favor, inténtelo de nuevo más tarde.');
         setLoading(false);
       });
+
+    // Fetch welcome message
+    fetch(`${BACKEND_URL}/welcome-message`)
+      .then(response => response.json())
+      .then(data => setWelcomeMessage(data.message))
+      .catch(error => console.error('Error fetching welcome message:', error));
   }, []);
 
   if (loading) {
@@ -42,8 +49,8 @@ function ModuleSelection() {
 
   return (
     <div className="module-selection">
-      <h2>Selecciona un Módulo</h2>
-      <p className="module-info">Puedes agregar nuevos módulos al crear ejercicios con nombres de módulos nuevos.</p>
+      <h2>¡Bienvenidos!</h2>
+      <p className="welcome-message">{welcomeMessage}</p>
       <div className="module-list">
         {modules.map((module, index) => (
           <Link key={index} to={`/module/${encodeURIComponent(module.name)}`} className="module-button">
