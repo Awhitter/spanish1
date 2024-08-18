@@ -45,38 +45,38 @@ async function initializeDatabase() {
   try {
     // Check if the exercises table exists
     const tableExists = await client.query(
-      "SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'exercises')"
+      "SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'ejercicios')"
     );
     
     if (!tableExists.rows[0].exists) {
-      // Create the exercises table
+      // Create the ejercicios table
       await client.query(`
-        CREATE TABLE exercises (
+        CREATE TABLE ejercicios (
           id SERIAL PRIMARY KEY,
           pregunta TEXT NOT NULL,
-          keywords TEXT[],
-          acceptable_answers TEXT[],
-          difficulty TEXT,
-          category TEXT,
-          hint TEXT
+          palabras_clave TEXT[],
+          respuestas_aceptables TEXT[],
+          dificultad TEXT,
+          categoria TEXT,
+          pista TEXT
         )
       `);
-      console.log('Exercises table created');
+      console.log('Tabla de ejercicios creada');
       
       // Load seed data
       const seedData = JSON.parse(fs.readFileSync(path.join(__dirname, 'src', 'data', 'ejercicios.json'), 'utf8'));
-      for (const exercise of seedData) {
+      for (const ejercicio of seedData) {
         await client.query(
-          'INSERT INTO exercises (pregunta, keywords, acceptable_answers, difficulty, category, hint) VALUES ($1, $2, $3, $4, $5, $6)',
-          [exercise.pregunta, exercise.keywords, exercise.acceptableAnswers, exercise.difficulty, exercise.category, exercise.hint]
+          'INSERT INTO ejercicios (pregunta, palabras_clave, respuestas_aceptables, dificultad, categoria, pista) VALUES ($1, $2, $3, $4, $5, $6)',
+          [ejercicio.pregunta, ejercicio.keywords, ejercicio.acceptableAnswers, ejercicio.difficulty, ejercicio.category, ejercicio.hint]
         );
       }
-      console.log('Seed data loaded');
+      console.log('Datos iniciales cargados');
     } else {
-      console.log('Exercises table already exists');
+      console.log('La tabla de ejercicios ya existe');
     }
   } catch (error) {
-    console.error('Error initializing database:', error);
+    console.error('Error al inicializar la base de datos:', error);
   } finally {
     client.release();
   }
@@ -85,79 +85,86 @@ async function initializeDatabase() {
 initializeDatabase();
 
 // Fetch all exercises
-app.get('/exercises', async (req, res) => {
+app.get('/ejercicios', async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM exercises');
+    const result = await pool.query('SELECT * FROM ejercicios');
+    console.log('Ejercicios obtenidos:', result.rows);
     res.json(result.rows);
   } catch (error) {
-    console.error('Error fetching exercises:', error);
-    res.status(500).json({ error: 'Internal server error', details: error.message });
+    console.error('Error al obtener ejercicios:', error);
+    res.status(500).json({ error: 'Error interno del servidor', detalles: error.message });
   }
 });
 
 // Add a new exercise
-app.post('/exercises', async (req, res) => {
-  const { pregunta, keywords, acceptableAnswers, difficulty, category, hint } = req.body;
+app.post('/ejercicios', async (req, res) => {
+  const { pregunta, palabrasClave, respuestasAceptables, dificultad, categoria, pista } = req.body;
+  console.log('Datos del ejercicio recibidos:', req.body);
   try {
     const result = await pool.query(
-      'INSERT INTO exercises (pregunta, keywords, acceptable_answers, difficulty, category, hint) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
-      [pregunta, keywords, acceptableAnswers, difficulty, category, hint]
+      'INSERT INTO ejercicios (pregunta, palabras_clave, respuestas_aceptables, dificultad, categoria, pista) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+      [pregunta, palabrasClave, respuestasAceptables, dificultad, categoria, pista]
     );
-    const newExercise = result.rows[0];
-    res.status(201).json(newExercise);
-    io.emit('exercise_added', newExercise);
+    const nuevoEjercicio = result.rows[0];
+    console.log('Nuevo ejercicio agregado:', nuevoEjercicio);
+    res.status(201).json(nuevoEjercicio);
+    io.emit('ejercicio_agregado', nuevoEjercicio);
   } catch (error) {
-    console.error('Error adding exercise:', error);
-    res.status(500).json({ error: 'Internal server error', details: error.message });
+    console.error('Error al agregar ejercicio:', error);
+    res.status(500).json({ error: 'Error interno del servidor', detalles: error.message });
   }
 });
 
 // Update an exercise
-app.put('/exercises/:id', async (req, res) => {
+app.put('/ejercicios/:id', async (req, res) => {
   const { id } = req.params;
-  const { pregunta, keywords, acceptableAnswers, difficulty, category, hint } = req.body;
+  const { pregunta, palabrasClave, respuestasAceptables, dificultad, categoria, pista } = req.body;
+  console.log('Actualizando ejercicio:', id, req.body);
   try {
     const result = await pool.query(
-      'UPDATE exercises SET pregunta = $1, keywords = $2, acceptable_answers = $3, difficulty = $4, category = $5, hint = $6 WHERE id = $7 RETURNING *',
-      [pregunta, keywords, acceptableAnswers, difficulty, category, hint, id]
+      'UPDATE ejercicios SET pregunta = $1, palabras_clave = $2, respuestas_aceptables = $3, dificultad = $4, categoria = $5, pista = $6 WHERE id = $7 RETURNING *',
+      [pregunta, palabrasClave, respuestasAceptables, dificultad, categoria, pista, id]
     );
     if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Exercise not found' });
+      return res.status(404).json({ error: 'Ejercicio no encontrado' });
     }
-    const updatedExercise = result.rows[0];
-    res.json(updatedExercise);
-    io.emit('exercise_updated', updatedExercise);
+    const ejercicioActualizado = result.rows[0];
+    console.log('Ejercicio actualizado:', ejercicioActualizado);
+    res.json(ejercicioActualizado);
+    io.emit('ejercicio_actualizado', ejercicioActualizado);
   } catch (error) {
-    console.error('Error updating exercise:', error);
-    res.status(500).json({ error: 'Internal server error', details: error.message });
+    console.error('Error al actualizar ejercicio:', error);
+    res.status(500).json({ error: 'Error interno del servidor', detalles: error.message });
   }
 });
 
 // Delete an exercise
-app.delete('/exercises/:id', async (req, res) => {
+app.delete('/ejercicios/:id', async (req, res) => {
   const { id } = req.params;
+  console.log('Eliminando ejercicio:', id);
   try {
-    const result = await pool.query('DELETE FROM exercises WHERE id = $1 RETURNING *', [id]);
+    const result = await pool.query('DELETE FROM ejercicios WHERE id = $1 RETURNING *', [id]);
     if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Exercise not found' });
+      return res.status(404).json({ error: 'Ejercicio no encontrado' });
     }
-    const deletedExercise = result.rows[0];
-    res.json(deletedExercise);
-    io.emit('exercise_deleted', id);
+    const ejercicioEliminado = result.rows[0];
+    console.log('Ejercicio eliminado:', ejercicioEliminado);
+    res.json(ejercicioEliminado);
+    io.emit('ejercicio_eliminado', id);
   } catch (error) {
-    console.error('Error deleting exercise:', error);
-    res.status(500).json({ error: 'Internal server error', details: error.message });
+    console.error('Error al eliminar ejercicio:', error);
+    res.status(500).json({ error: 'Error interno del servidor', detalles: error.message });
   }
 });
 
 io.on('connection', (socket) => {
-  console.log('A user connected');
+  console.log('Un usuario se ha conectado');
   socket.on('disconnect', () => {
-    console.log('User disconnected');
+    console.log('Un usuario se ha desconectado');
   });
 });
 
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`Servidor corriendo en el puerto ${PORT}`);
 });

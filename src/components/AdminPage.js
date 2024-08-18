@@ -5,137 +5,143 @@ import './AdminPage.css';
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000';
 
 function AdminPage() {
-  const [exercises, setExercises] = useState([]);
-  const [editingExercise, setEditingExercise] = useState(null);
-  const [newExercise, setNewExercise] = useState({
+  const [ejercicios, setEjercicios] = useState([]);
+  const [ejercicioEditando, setEjercicioEditando] = useState(null);
+  const [nuevoEjercicio, setNuevoEjercicio] = useState({
     pregunta: '',
-    keywords: [],
-    acceptableAnswers: [],
-    difficulty: 'easy',
-    category: '',
-    hint: ''
+    palabrasClave: [],
+    respuestasAceptables: [],
+    dificultad: 'fácil',
+    categoria: '',
+    pista: ''
   });
-  const [errorMessage, setErrorMessage] = useState('');
-  const [successMessage, setSuccessMessage] = useState('');
+  const [mensajeError, setMensajeError] = useState('');
+  const [mensajeExito, setMensajeExito] = useState('');
 
   useEffect(() => {
-    fetchExercises();
+    obtenerEjercicios();
   }, []);
 
-  const fetchExercises = async () => {
+  const obtenerEjercicios = async () => {
     try {
-      const response = await fetch(`${BACKEND_URL}/exercises`);
+      const response = await fetch(`${BACKEND_URL}/ejercicios`);
       if (!response.ok) {
-        throw new Error('Failed to fetch exercises');
+        throw new Error('No se pudieron obtener los ejercicios');
       }
       const data = await response.json();
-      setExercises(data);
+      console.log('Ejercicios obtenidos:', data);
+      setEjercicios(data);
     } catch (error) {
-      console.error('Error fetching exercises:', error);
-      setErrorMessage('Failed to fetch exercises. Please try again.');
+      console.error('Error al obtener ejercicios:', error);
+      setMensajeError('No se pudieron obtener los ejercicios. Por favor, inténtelo de nuevo.');
     }
   };
 
-  const handleInputChange = (e, field) => {
-    if (field === 'keywords' || field === 'acceptableAnswers') {
-      setNewExercise({
-        ...newExercise,
-        [field]: e.target.value.split(',').map(item => item.trim())
+  const manejarCambioInput = (e, campo) => {
+    if (campo === 'palabrasClave' || campo === 'respuestasAceptables') {
+      setNuevoEjercicio({
+        ...nuevoEjercicio,
+        [campo]: e.target.value.split(',').map(item => item.trim())
       });
     } else {
-      setNewExercise({
-        ...newExercise,
-        [field]: e.target.value
+      setNuevoEjercicio({
+        ...nuevoEjercicio,
+        [campo]: e.target.value
       });
     }
   };
 
-  const addExerciseToAPI = async (exercise) => {
-    const response = await fetch(`${BACKEND_URL}/exercises`, {
+  const agregarEjercicioAPI = async (ejercicio) => {
+    console.log('Enviando datos del ejercicio:', ejercicio);
+    const response = await fetch(`${BACKEND_URL}/ejercicios`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(exercise),
+      body: JSON.stringify(ejercicio),
     });
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(errorData.error || 'Failed to add exercise');
+      throw new Error(errorData.error || 'No se pudo agregar el ejercicio');
     }
     return await response.json();
   };
 
-  const handleAddExercise = async () => {
-    if (newExercise.pregunta.trim() === '' || newExercise.acceptableAnswers.length === 0) {
-      setErrorMessage('Please enter both question and at least one acceptable answer.');
+  const manejarAgregarEjercicio = async () => {
+    if (nuevoEjercicio.pregunta.trim() === '' || nuevoEjercicio.respuestasAceptables.length === 0) {
+      setMensajeError('Por favor, ingrese tanto la pregunta como al menos una respuesta aceptable.');
       return;
     }
     try {
-      const addedExercise = await addExerciseToAPI(newExercise);
-      setExercises([...exercises, addedExercise]);
-      setNewExercise({
+      const ejercicioAgregado = await agregarEjercicioAPI(nuevoEjercicio);
+      console.log('Ejercicio agregado:', ejercicioAgregado);
+      setEjercicios([...ejercicios, ejercicioAgregado]);
+      setNuevoEjercicio({
         pregunta: '',
-        keywords: [],
-        acceptableAnswers: [],
-        difficulty: 'easy',
-        category: '',
-        hint: ''
+        palabrasClave: [],
+        respuestasAceptables: [],
+        dificultad: 'fácil',
+        categoria: '',
+        pista: ''
       });
-      setSuccessMessage('Exercise added successfully!');
-      setErrorMessage('');
+      setMensajeExito('¡Ejercicio agregado con éxito!');
+      setMensajeError('');
     } catch (error) {
-      console.error('Error adding exercise:', error);
-      setErrorMessage(`Failed to add exercise: ${error.message}`);
+      console.error('Error al agregar ejercicio:', error);
+      setMensajeError(`No se pudo agregar el ejercicio: ${error.message}`);
     }
   };
 
-  const handleEditExercise = (exercise) => {
-    setEditingExercise(exercise);
+  const manejarEditarEjercicio = (ejercicio) => {
+    setEjercicioEditando(ejercicio);
   };
 
-  const handleUpdateExercise = async () => {
+  const manejarActualizarEjercicio = async () => {
     try {
-      const response = await fetch(`${BACKEND_URL}/exercises/${editingExercise.id}`, {
+      console.log('Actualizando ejercicio:', ejercicioEditando);
+      const response = await fetch(`${BACKEND_URL}/ejercicios/${ejercicioEditando.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(editingExercise),
+        body: JSON.stringify(ejercicioEditando),
       });
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to update exercise');
+        throw new Error(errorData.error || 'No se pudo actualizar el ejercicio');
       }
-      const updatedExercise = await response.json();
-      setExercises(exercises.map(ex => ex.id === updatedExercise.id ? updatedExercise : ex));
-      setEditingExercise(null);
-      setSuccessMessage('Exercise updated successfully!');
-      setErrorMessage('');
+      const ejercicioActualizado = await response.json();
+      console.log('Ejercicio actualizado:', ejercicioActualizado);
+      setEjercicios(ejercicios.map(ej => ej.id === ejercicioActualizado.id ? ejercicioActualizado : ej));
+      setEjercicioEditando(null);
+      setMensajeExito('¡Ejercicio actualizado con éxito!');
+      setMensajeError('');
     } catch (error) {
-      console.error('Error updating exercise:', error);
-      setErrorMessage(`Failed to update exercise: ${error.message}`);
+      console.error('Error al actualizar ejercicio:', error);
+      setMensajeError(`No se pudo actualizar el ejercicio: ${error.message}`);
     }
   };
 
-  const handleDeleteExercise = async (id) => {
+  const manejarEliminarEjercicio = async (id) => {
     try {
-      const response = await fetch(`${BACKEND_URL}/exercises/${id}`, {
+      console.log('Eliminando ejercicio:', id);
+      const response = await fetch(`${BACKEND_URL}/ejercicios/${id}`, {
         method: 'DELETE',
       });
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to delete exercise');
+        throw new Error(errorData.error || 'No se pudo eliminar el ejercicio');
       }
-      setExercises(exercises.filter(ex => ex.id !== id));
-      setSuccessMessage('Exercise deleted successfully!');
-      setErrorMessage('');
+      setEjercicios(ejercicios.filter(ej => ej.id !== id));
+      setMensajeExito('¡Ejercicio eliminado con éxito!');
+      setMensajeError('');
     } catch (error) {
-      console.error('Error deleting exercise:', error);
-      setErrorMessage(`Failed to delete exercise: ${error.message}`);
+      console.error('Error al eliminar ejercicio:', error);
+      setMensajeError(`No se pudo eliminar el ejercicio: ${error.message}`);
     }
   };
 
-  const handleFileUpload = (e) => {
+  const manejarSubirArchivo = (e) => {
     const file = e.target.files[0];
     const reader = new FileReader();
     reader.onload = async (evt) => {
@@ -146,28 +152,28 @@ function AdminPage() {
       const data = XLSX.utils.sheet_to_json(ws);
       const formattedData = data.map(item => ({
         pregunta: item.pregunta,
-        keywords: item.keywords ? item.keywords.split(',').map(k => k.trim()) : [],
-        acceptableAnswers: item.acceptableAnswers ? item.acceptableAnswers.split(',').map(a => a.trim()) : [],
-        difficulty: item.difficulty || 'easy',
-        category: item.category || '',
-        hint: item.hint || ''
+        palabrasClave: item.palabrasClave ? item.palabrasClave.split(',').map(k => k.trim()) : [],
+        respuestasAceptables: item.respuestasAceptables ? item.respuestasAceptables.split(',').map(a => a.trim()) : [],
+        dificultad: item.dificultad || 'fácil',
+        categoria: item.categoria || '',
+        pista: item.pista || ''
       }));
       
       let addedCount = 0;
       let errorCount = 0;
-      for (const exercise of formattedData) {
+      for (const ejercicio of formattedData) {
         try {
-          await addExerciseToAPI(exercise);
+          await agregarEjercicioAPI(ejercicio);
           addedCount++;
         } catch (error) {
-          console.error('Error adding exercise from file:', error);
+          console.error('Error al agregar ejercicio desde archivo:', error);
           errorCount++;
         }
       }
-      fetchExercises();
-      setSuccessMessage(`Added ${addedCount} exercises successfully.`);
+      obtenerEjercicios();
+      setMensajeExito(`Se agregaron ${addedCount} ejercicios con éxito.`);
       if (errorCount > 0) {
-        setErrorMessage(`Failed to add ${errorCount} exercises. Check console for details.`);
+        setMensajeError(`No se pudieron agregar ${errorCount} ejercicios. Revise la consola para más detalles.`);
       }
     };
     reader.readAsBinaryString(file);
@@ -175,131 +181,131 @@ function AdminPage() {
 
   return (
     <div className="admin-page">
-      <h2>Admin Page</h2>
-      {errorMessage && <div className="error-message">{errorMessage}</div>}
-      {successMessage && <div className="success-message">{successMessage}</div>}
-      <h3>Add New Exercise</h3>
+      <h2>Página de Administración</h2>
+      {mensajeError && <div className="error-message">{mensajeError}</div>}
+      {mensajeExito && <div className="success-message">{mensajeExito}</div>}
+      <h3>Agregar Nuevo Ejercicio</h3>
       <div className="form-group">
-        <label>Question:</label>
+        <label>Pregunta:</label>
         <input
           type="text"
-          value={newExercise.pregunta}
-          onChange={(e) => handleInputChange(e, 'pregunta')}
+          value={nuevoEjercicio.pregunta}
+          onChange={(e) => manejarCambioInput(e, 'pregunta')}
         />
       </div>
       <div className="form-group">
-        <label>Keywords (comma-separated):</label>
+        <label>Palabras Clave (separadas por comas):</label>
         <input
           type="text"
-          value={newExercise.keywords.join(', ')}
-          onChange={(e) => handleInputChange(e, 'keywords')}
+          value={nuevoEjercicio.palabrasClave.join(', ')}
+          onChange={(e) => manejarCambioInput(e, 'palabrasClave')}
         />
       </div>
       <div className="form-group">
-        <label>Acceptable Answers (comma-separated):</label>
+        <label>Respuestas Aceptables (separadas por comas):</label>
         <input
           type="text"
-          value={newExercise.acceptableAnswers.join(', ')}
-          onChange={(e) => handleInputChange(e, 'acceptableAnswers')}
+          value={nuevoEjercicio.respuestasAceptables.join(', ')}
+          onChange={(e) => manejarCambioInput(e, 'respuestasAceptables')}
         />
       </div>
       <div className="form-group">
-        <label>Difficulty:</label>
+        <label>Dificultad:</label>
         <select
-          value={newExercise.difficulty}
-          onChange={(e) => handleInputChange(e, 'difficulty')}
+          value={nuevoEjercicio.dificultad}
+          onChange={(e) => manejarCambioInput(e, 'dificultad')}
         >
-          <option value="easy">Easy</option>
-          <option value="medium">Medium</option>
-          <option value="hard">Hard</option>
+          <option value="fácil">Fácil</option>
+          <option value="medio">Medio</option>
+          <option value="difícil">Difícil</option>
         </select>
       </div>
       <div className="form-group">
-        <label>Category:</label>
+        <label>Categoría:</label>
         <input
           type="text"
-          value={newExercise.category}
-          onChange={(e) => handleInputChange(e, 'category')}
+          value={nuevoEjercicio.categoria}
+          onChange={(e) => manejarCambioInput(e, 'categoria')}
         />
       </div>
       <div className="form-group">
-        <label>Hint:</label>
+        <label>Pista:</label>
         <input
           type="text"
-          value={newExercise.hint}
-          onChange={(e) => handleInputChange(e, 'hint')}
+          value={nuevoEjercicio.pista}
+          onChange={(e) => manejarCambioInput(e, 'pista')}
         />
       </div>
-      <button onClick={handleAddExercise}>Add Exercise</button>
+      <button onClick={manejarAgregarEjercicio}>Agregar Ejercicio</button>
 
-      <h3>Upload Excel File</h3>
-      <input type="file" accept=".xlsx, .xls" onChange={handleFileUpload} />
+      <h3>Subir Archivo Excel</h3>
+      <input type="file" accept=".xlsx, .xls" onChange={manejarSubirArchivo} />
 
-      <h3>Current Exercises</h3>
+      <h3>Ejercicios Actuales</h3>
       <ul>
-        {exercises.map((exercise) => (
-          <li key={exercise.id}>
-            {editingExercise && editingExercise.id === exercise.id ? (
+        {ejercicios.map((ejercicio) => (
+          <li key={ejercicio.id}>
+            {ejercicioEditando && ejercicioEditando.id === ejercicio.id ? (
               <>
                 <div className="form-group">
-                  <label>Question:</label>
+                  <label>Pregunta:</label>
                   <input
-                    value={editingExercise.pregunta}
-                    onChange={(e) => setEditingExercise({...editingExercise, pregunta: e.target.value})}
+                    value={ejercicioEditando.pregunta}
+                    onChange={(e) => setEjercicioEditando({...ejercicioEditando, pregunta: e.target.value})}
                   />
                 </div>
                 <div className="form-group">
-                  <label>Keywords:</label>
+                  <label>Palabras Clave:</label>
                   <input
-                    value={editingExercise.keywords ? editingExercise.keywords.join(', ') : ''}
-                    onChange={(e) => setEditingExercise({...editingExercise, keywords: e.target.value.split(',').map(k => k.trim())})}
+                    value={ejercicioEditando.palabras_clave ? ejercicioEditando.palabras_clave.join(', ') : ''}
+                    onChange={(e) => setEjercicioEditando({...ejercicioEditando, palabras_clave: e.target.value.split(',').map(k => k.trim())})}
                   />
                 </div>
                 <div className="form-group">
-                  <label>Acceptable Answers:</label>
+                  <label>Respuestas Aceptables:</label>
                   <input
-                    value={editingExercise.acceptable_answers ? editingExercise.acceptable_answers.join(', ') : ''}
-                    onChange={(e) => setEditingExercise({...editingExercise, acceptable_answers: e.target.value.split(',').map(a => a.trim())})}
+                    value={ejercicioEditando.respuestas_aceptables ? ejercicioEditando.respuestas_aceptables.join(', ') : ''}
+                    onChange={(e) => setEjercicioEditando({...ejercicioEditando, respuestas_aceptables: e.target.value.split(',').map(a => a.trim())})}
                   />
                 </div>
                 <div className="form-group">
-                  <label>Difficulty:</label>
+                  <label>Dificultad:</label>
                   <select
-                    value={editingExercise.difficulty}
-                    onChange={(e) => setEditingExercise({...editingExercise, difficulty: e.target.value})}
+                    value={ejercicioEditando.dificultad}
+                    onChange={(e) => setEjercicioEditando({...ejercicioEditando, dificultad: e.target.value})}
                   >
-                    <option value="easy">Easy</option>
-                    <option value="medium">Medium</option>
-                    <option value="hard">Hard</option>
+                    <option value="fácil">Fácil</option>
+                    <option value="medio">Medio</option>
+                    <option value="difícil">Difícil</option>
                   </select>
                 </div>
                 <div className="form-group">
-                  <label>Category:</label>
+                  <label>Categoría:</label>
                   <input
-                    value={editingExercise.category}
-                    onChange={(e) => setEditingExercise({...editingExercise, category: e.target.value})}
+                    value={ejercicioEditando.categoria}
+                    onChange={(e) => setEjercicioEditando({...ejercicioEditando, categoria: e.target.value})}
                   />
                 </div>
                 <div className="form-group">
-                  <label>Hint:</label>
+                  <label>Pista:</label>
                   <input
-                    value={editingExercise.hint}
-                    onChange={(e) => setEditingExercise({...editingExercise, hint: e.target.value})}
+                    value={ejercicioEditando.pista}
+                    onChange={(e) => setEjercicioEditando({...ejercicioEditando, pista: e.target.value})}
                   />
                 </div>
-                <button onClick={handleUpdateExercise}>Update</button>
+                <button onClick={manejarActualizarEjercicio}>Actualizar</button>
               </>
             ) : (
               <>
                 <span>
-                  <strong>Question:</strong> {exercise.pregunta}<br />
-                  <strong>Acceptable Answers:</strong> {exercise.acceptable_answers ? exercise.acceptable_answers.join(', ') : ''}<br />
-                  <strong>Difficulty:</strong> {exercise.difficulty}<br />
-                  <strong>Category:</strong> {exercise.category}<br />
-                  <strong>Hint:</strong> {exercise.hint}
+                  <strong>Pregunta:</strong> {ejercicio.pregunta}<br />
+                  <strong>Respuestas Aceptables:</strong> {ejercicio.respuestas_aceptables ? ejercicio.respuestas_aceptables.join(', ') : ''}<br />
+                  <strong>Dificultad:</strong> {ejercicio.dificultad}<br />
+                  <strong>Categoría:</strong> {ejercicio.categoria}<br />
+                  <strong>Pista:</strong> {ejercicio.pista}
                 </span>
-                <button onClick={() => handleEditExercise(exercise)}>Edit</button>
-                <button onClick={() => handleDeleteExercise(exercise.id)}>Delete</button>
+                <button onClick={() => manejarEditarEjercicio(ejercicio)}>Editar</button>
+                <button onClick={() => manejarEliminarEjercicio(ejercicio.id)}>Eliminar</button>
               </>
             )}
           </li>

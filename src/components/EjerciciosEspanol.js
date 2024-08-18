@@ -4,91 +4,91 @@ import './EjerciciosEspanol.css';
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000';
 
 function EjerciciosEspanol() {
-  const [exercises, setExercises] = useState([]);
-  const [currentExercise, setCurrentExercise] = useState(null);
-  const [userAnswer, setUserAnswer] = useState('');
-  const [feedback, setFeedback] = useState('');
-  const [stats, setStats] = useState({ correct: 0, incorrect: 0, skipped: 0 });
-  const [showHint, setShowHint] = useState(false);
+  const [ejercicios, setEjercicios] = useState([]);
+  const [ejercicioActual, setEjercicioActual] = useState(null);
+  const [respuestaUsuario, setRespuestaUsuario] = useState('');
+  const [retroalimentacion, setRetroalimentacion] = useState('');
+  const [estadisticas, setEstadisticas] = useState({ correctas: 0, incorrectas: 0, saltadas: 0 });
+  const [mostrarPista, setMostrarPista] = useState(false);
 
   useEffect(() => {
-    fetchExercises();
+    obtenerEjercicios();
   }, []);
 
-  const fetchExercises = async () => {
+  const obtenerEjercicios = async () => {
     try {
-      const response = await fetch(`${BACKEND_URL}/exercises`);
+      const response = await fetch(`${BACKEND_URL}/ejercicios`);
       if (!response.ok) {
-        throw new Error('Failed to fetch exercises');
+        throw new Error('No se pudieron obtener los ejercicios');
       }
       const data = await response.json();
-      setExercises(data);
+      setEjercicios(data);
       if (data.length > 0) {
-        setCurrentExercise(data[Math.floor(Math.random() * data.length)]);
+        setEjercicioActual(data[Math.floor(Math.random() * data.length)]);
       }
     } catch (error) {
-      console.error('Error fetching exercises:', error);
+      console.error('Error al obtener ejercicios:', error);
     }
   };
 
-  const handleSubmit = (e) => {
+  const manejarEnvio = (e) => {
     e.preventDefault();
-    if (currentExercise.acceptable_answers.includes(userAnswer.toLowerCase().trim())) {
-      setFeedback('¡Correcto!');
-      setStats(prev => ({ ...prev, correct: prev.correct + 1 }));
+    if (ejercicioActual.respuestas_aceptables.includes(respuestaUsuario.toLowerCase().trim())) {
+      setRetroalimentacion('¡Correcto!');
+      setEstadisticas(prev => ({ ...prev, correctas: prev.correctas + 1 }));
     } else {
-      setFeedback(`Incorrecto. La respuesta correcta es: ${currentExercise.acceptable_answers.join(' o ')}`);
-      setStats(prev => ({ ...prev, incorrect: prev.incorrect + 1 }));
+      setRetroalimentacion(`Incorrecto. La respuesta correcta es: ${ejercicioActual.respuestas_aceptables.join(' o ')}`);
+      setEstadisticas(prev => ({ ...prev, incorrectas: prev.incorrectas + 1 }));
     }
   };
 
-  const handleSkip = () => {
-    setStats(prev => ({ ...prev, skipped: prev.skipped + 1 }));
-    nextExercise();
+  const manejarSaltar = () => {
+    setEstadisticas(prev => ({ ...prev, saltadas: prev.saltadas + 1 }));
+    siguienteEjercicio();
   };
 
-  const nextExercise = () => {
-    const nextExercise = exercises[Math.floor(Math.random() * exercises.length)];
-    setCurrentExercise(nextExercise);
-    setUserAnswer('');
-    setFeedback('');
-    setShowHint(false);
+  const siguienteEjercicio = () => {
+    const siguienteEjercicio = ejercicios[Math.floor(Math.random() * ejercicios.length)];
+    setEjercicioActual(siguienteEjercicio);
+    setRespuestaUsuario('');
+    setRetroalimentacion('');
+    setMostrarPista(false);
   };
 
-  const handleShowHint = () => {
-    setShowHint(true);
+  const manejarMostrarPista = () => {
+    setMostrarPista(true);
   };
 
-  if (!currentExercise) {
+  if (!ejercicioActual) {
     return <div>Cargando ejercicios...</div>;
   }
 
   return (
     <div className="ejercicios-espanol">
       <h2>Ejercicios de Español</h2>
-      <div className="exercise-container">
-        <h3>Nivel: {currentExercise.difficulty}</h3>
-        <p className="question">{currentExercise.pregunta}</p>
-        <form onSubmit={handleSubmit}>
+      <div className="contenedor-ejercicio">
+        <h3>Nivel: {ejercicioActual.dificultad}</h3>
+        <p className="pregunta">{ejercicioActual.pregunta}</p>
+        <form onSubmit={manejarEnvio}>
           <input
             type="text"
-            value={userAnswer}
-            onChange={(e) => setUserAnswer(e.target.value)}
+            value={respuestaUsuario}
+            onChange={(e) => setRespuestaUsuario(e.target.value)}
             placeholder="Tu respuesta"
           />
           <button type="submit">Verificar</button>
         </form>
-        <button onClick={handleShowHint} disabled={showHint}>Pista</button>
-        {showHint && <p className="hint">{currentExercise.hint}</p>}
-        <button onClick={nextExercise}>Reiniciar</button>
-        <button onClick={handleSkip}>Saltar</button>
-        {feedback && <p className="feedback">{feedback}</p>}
+        <button onClick={manejarMostrarPista} disabled={mostrarPista}>Pista</button>
+        {mostrarPista && <p className="pista">{ejercicioActual.pista}</p>}
+        <button onClick={siguienteEjercicio}>Reiniciar</button>
+        <button onClick={manejarSaltar}>Saltar</button>
+        {retroalimentacion && <p className="retroalimentacion">{retroalimentacion}</p>}
       </div>
-      <div className="stats">
-        <p>Ejercicio {exercises.indexOf(currentExercise) + 1} de {exercises.length}</p>
-        <p>Correctas: {stats.correct}</p>
-        <p>Incorrectas: {stats.incorrect}</p>
-        <p>Saltadas: {stats.skipped}</p>
+      <div className="estadisticas">
+        <p>Ejercicio {ejercicios.indexOf(ejercicioActual) + 1} de {ejercicios.length}</p>
+        <p>Correctas: {estadisticas.correctas}</p>
+        <p>Incorrectas: {estadisticas.incorrectas}</p>
+        <p>Saltadas: {estadisticas.saltadas}</p>
       </div>
     </div>
   );
