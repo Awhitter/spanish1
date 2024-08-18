@@ -247,18 +247,20 @@ function AdminPage() {
 
   return (
     <div className={`admin-page ${darkMode ? 'dark-mode' : ''}`}>
-      <h2>Página de Administración</h2>
-      <button onClick={handleLogout} className="logout-button">Cerrar sesión</button>
+      <div className="admin-header">
+        <h2>Página de Administración</h2>
+        <button onClick={handleLogout} className="logout-button">Cerrar sesión</button>
+      </div>
       {mensajeError && <div className="error-message">{mensajeError}</div>}
       {mensajeExito && <div className="success-message">{mensajeExito}</div>}
       <div className="admin-section">
         <h3>Agregar Nuevo Ejercicio</h3>
         <div className="form-group">
           <label>Pregunta:</label>
-          <input
-            type="text"
+          <textarea
             value={nuevoEjercicio.pregunta}
             onChange={(e) => manejarCambioInput(e, 'pregunta')}
+            rows="3"
           />
         </div>
         <div className="form-group">
@@ -343,10 +345,11 @@ function AdminPage() {
             <li key={ejercicio.id} className="ejercicio-item">
               {ejercicioEditando && ejercicioEditando.id === ejercicio.id ? (
                 <div className="ejercicio-edit">
-                  <input
+                  <textarea
                     value={ejercicioEditando.pregunta}
                     onChange={(e) => setEjercicioEditando({...ejercicioEditando, pregunta: e.target.value})}
                     placeholder="Pregunta"
+                    rows="3"
                   />
                   <input
                     value={ejercicioEditando.palabras_clave ? ejercicioEditando.palabras_clave.join(', ') : ''}

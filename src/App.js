@@ -1,31 +1,23 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, createContext } from 'react';
 import { BrowserRouter as Router, Route, Routes, Link } from 'react-router-dom';
 import './App.css';
 import EjerciciosEspanol from './components/EjerciciosEspanol';
 import AdminPage from './components/AdminPage';
 
-export const DarkModeContext = React.createContext();
+export const DarkModeContext = createContext();
 
 function App() {
-  const [darkMode, setDarkMode] = useState(false);
+  const [darkMode, setDarkMode] = useState(() => {
+    const savedMode = localStorage.getItem('darkMode');
+    return savedMode ? JSON.parse(savedMode) : false;
+  });
 
   useEffect(() => {
-    const isDarkMode = localStorage.getItem('darkMode') === 'true';
-    setDarkMode(isDarkMode);
-  }, []);
-
-  useEffect(() => {
-    if (darkMode) {
-      document.body.classList.add('dark-mode');
-    } else {
-      document.body.classList.remove('dark-mode');
-    }
-    localStorage.setItem('darkMode', darkMode);
+    document.body.classList.toggle('dark-mode', darkMode);
+    localStorage.setItem('darkMode', JSON.stringify(darkMode));
   }, [darkMode]);
 
-  const toggleDarkMode = () => {
-    setDarkMode(!darkMode);
-  };
+  const toggleDarkMode = () => setDarkMode(prevMode => !prevMode);
 
   return (
     <DarkModeContext.Provider value={{ darkMode, toggleDarkMode }}>
@@ -37,7 +29,7 @@ function App() {
               <Link to="/" className="nav-link">Inicio</Link>
               <Link to="/admin" className="nav-link">Admin</Link>
             </nav>
-            <button onClick={toggleDarkMode} className="toggle-dark-mode">
+            <button onClick={toggleDarkMode} className="toggle-dark-mode" aria-label="Toggle dark mode">
               {darkMode ? '☀️' : '🌙'}
             </button>
           </header>
@@ -48,7 +40,7 @@ function App() {
             </Routes>
           </main>
           <footer className="App-footer">
-            <p>© 2023 Ejercicios de Español de Alejandra. Todos los derechos reservados.</p>
+            <p>© {new Date().getFullYear()} Ejercicios de Español de Alejandra. Todos los derechos reservados.</p>
           </footer>
         </div>
       </Router>

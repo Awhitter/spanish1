@@ -1,105 +1,44 @@
-import React, { useState, useEffect, useCallback, useContext } from 'react';
+import React, { useState, useEffect, useCallback, useContext, useMemo } from 'react';
 import { CSSTransition } from 'react-transition-group';
 import { DarkModeContext } from '../App';
+import useExerciseManagement from '../hooks/useExerciseManagement';
 import './EjerciciosEspanol.css';
-
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000';
 
 function EjerciciosEspanol() {
   const { darkMode } = useContext(DarkModeContext);
-  const [ejercicios, setEjercicios] = useState([]);
-  const [ejercicioActual, setEjercicioActual] = useState(null);
-  const [respuestaUsuario, setRespuestaUsuario] = useState('');
-  const [retroalimentacion, setRetroalimentacion] = useState('');
-  const [estadisticas, setEstadisticas] = useState({ correctas: 0, incorrectas: 0, saltadas: 0 });
-  const [mostrarPista, setMostrarPista] = useState(false);
+  const {
+    ejercicioActual,
+    respuestaUsuario,
+    retroalimentacion,
+    estadisticas,
+    mostrarPista,
+    error,
+    setRespuestaUsuario,
+    verificarRespuesta,
+    siguienteEjercicio,
+    manejarSaltar,
+    manejarMostrarPista,
+    reiniciarQuiz,
+  } = useExerciseManagement();
+
   const [animacionSalida, setAnimacionSalida] = useState(false);
-  const [progreso, setProgreso] = useState(0);
-  const [error, setError] = useState(null);
 
-  const obtenerEjercicios = useCallback(async () => {
-    try {
-      const response = await fetch(`${BACKEND_URL}/ejercicios`);
-      if (!response.ok) {
-        throw new Error('No se pudieron obtener los ejercicios');
-      }
-      const data = await response.json();
-      setEjercicios(data);
-      if (data.length > 0) {
-        setEjercicioActual(data[Math.floor(Math.random() * data.length)]);
-      } else {
-        setError('No hay ejercicios disponibles');
-      }
-    } catch (error) {
-      console.error('Error al obtener ejercicios:', error);
-      setError('Error al cargar los ejercicios. Por favor, intente de nuevo más tarde.');
-    }
-  }, []);
-
-  useEffect(() => {
-    obtenerEjercicios();
-  }, [obtenerEjercicios]);
-
-  useEffect(() => {
-    if (ejercicios.length > 0) {
-      setProgreso((estadisticas.correctas + estadisticas.incorrectas + estadisticas.saltadas) / ejercicios.length * 100);
-    }
-  }, [estadisticas, ejercicios]);
-
-  const verificarRespuesta = useCallback(() => {
-    if (!ejercicioActual || !ejercicioActual.respuestas_aceptables) {
-      setError('Error: El ejercicio actual no es válido');
-      return;
-    }
-
-    const respuestasAceptables = Array.isArray(ejercicioActual.respuestas_aceptables) 
-      ? ejercicioActual.respuestas_aceptables 
-      : [ejercicioActual.respuestas_aceptables];
-
-    const respuestaUsuarioNormalizada = respuestaUsuario.toLowerCase().trim().replace(/\s+/g, ' ');
-    const respuestasAceptablesNormalizadas = respuestasAceptables.map(respuesta => 
-      respuesta.toLowerCase().trim().replace(/\s+/g, ' ')
-    );
-
-    if (respuestasAceptablesNormalizadas.includes(respuestaUsuarioNormalizada)) {
-      setRetroalimentacion('¡Correcto!');
-      setEstadisticas(prev => ({ ...prev, correctas: prev.correctas + 1 }));
-    } else {
-      setRetroalimentacion(`Incorrecto. La respuesta correcta es: ${respuestasAceptables.join(' o ')}`);
-      setEstadisticas(prev => ({ ...prev, incorrectas: prev.incorrectas + 1 }));
-    }
-  }, [ejercicioActual, respuestaUsuario]);
+  const progreso = useMemo(() => {
+    const total = estadisticas.correctas + estadisticas.incorrectas + estadisticas.saltadas;
+    return total > 0 ? (total / (total + 1)) * 100 : 0;
+  }, [estadisticas]);
 
   const manejarEnvio = useCallback((e) => {
     e.preventDefault();
     verificarRespuesta();
   }, [verificarRespuesta]);
 
-  const siguienteEjercicio = useCallback(() => {
+  const manejarSiguienteEjercicio = useCallback(() => {
     setAnimacionSalida(true);
     setTimeout(() => {
-      const siguienteEjercicio = ejercicios[Math.floor(Math.random() * ejercicios.length)];
-      setEjercicioActual(siguienteEjercicio);
-      setRespuestaUsuario('');
-      setRetroalimentacion('');
-      setMostrarPista(false);
+      siguienteEjercicio();
       setAnimacionSalida(false);
-      setError(null);
     }, 300);
-  }, [ejercicios]);
-
-  const manejarSaltar = useCallback(() => {
-    setEstadisticas(prev => ({ ...prev, saltadas: prev.saltadas + 1 }));
-    siguienteEjercicio();
-  }, [siguienteEjercicio]);
-
-  const manejarMostrarPista = useCallback(() => {
-    setMostrarPista(true);
-  }, []);
-
-  const reiniciarQuiz = useCallback(() => {
-    setEstadisticas({ correctas: 0, incorrectas: 0, saltadas: 0 });
-    siguienteEjercicio();
   }, [siguienteEjercicio]);
 
   const manejarTeclas = useCallback((e) => {
@@ -107,12 +46,12 @@ function EjerciciosEspanol() {
       e.preventDefault();
       verificarRespuesta();
     } else if (e.key === 'ArrowRight') {
-      siguienteEjercicio();
+      manejarSiguienteEjercicio();
     } else if (e.key === ' ') {
       e.preventDefault();
       manejarMostrarPista();
     }
-  }, [verificarRespuesta, siguienteEjercicio, manejarMostrarPista]);
+  }, [verificarRespuesta, manejarSiguienteEjercicio, manejarMostrarPista]);
 
   useEffect(() => {
     document.addEventListener('keydown', manejarTeclas);
@@ -158,7 +97,7 @@ function EjerciciosEspanol() {
             <button onClick={manejarMostrarPista} disabled={mostrarPista} className="btn btn-secondary">
               Pista
             </button>
-            <button onClick={siguienteEjercicio} className="btn btn-primary">Siguiente</button>
+            <button onClick={manejarSiguienteEjercicio} className="btn btn-primary">Siguiente</button>
             <button onClick={manejarSaltar} className="btn btn-secondary">Saltar</button>
             <button onClick={reiniciarQuiz} className="btn btn-warning">Reiniciar Quiz</button>
           </div>
@@ -187,4 +126,4 @@ function EjerciciosEspanol() {
   );
 }
 
-export default EjerciciosEspanol;
+export default React.memo(EjerciciosEspanol);

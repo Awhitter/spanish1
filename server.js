@@ -100,7 +100,7 @@ initializeDatabase();
 // Fetch all exercises
 app.get('/ejercicios', async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM ejercicios');
+    const result = await pool.query('SELECT * FROM ejercicios WHERE array_length(respuestas_aceptables, 1) > 0');
     console.log(`Ejercicios obtenidos: ${result.rows.length}`);
     res.json(result.rows);
   } catch (error) {
@@ -113,6 +113,11 @@ app.get('/ejercicios', async (req, res) => {
 app.post('/ejercicios', async (req, res) => {
   const { pregunta, palabrasClave, respuestasAceptables, dificultad, categoria, pista } = req.body;
   console.log('Datos del ejercicio recibidos:', req.body);
+
+  if (!pregunta || !respuestasAceptables || respuestasAceptables.length === 0) {
+    return res.status(400).json({ error: 'La pregunta y al menos una respuesta aceptable son obligatorias' });
+  }
+
   try {
     const result = await pool.query(
       'INSERT INTO ejercicios (pregunta, palabras_clave, respuestas_aceptables, dificultad, categoria, pista) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
@@ -133,6 +138,11 @@ app.put('/ejercicios/:id', async (req, res) => {
   const { id } = req.params;
   const { pregunta, palabrasClave, respuestasAceptables, dificultad, categoria, pista } = req.body;
   console.log('Actualizando ejercicio:', id, req.body);
+
+  if (!pregunta || !respuestasAceptables || respuestasAceptables.length === 0) {
+    return res.status(400).json({ error: 'La pregunta y al menos una respuesta aceptable son obligatorias' });
+  }
+
   try {
     const result = await pool.query(
       'UPDATE ejercicios SET pregunta = $1, palabras_clave = $2, respuestas_aceptables = $3, dificultad = $4, categoria = $5, pista = $6 WHERE id = $7 RETURNING *',
@@ -183,22 +193,33 @@ app.post('/upload-csv', upload.single('file'), async (req, res) => {
     .on('end', async () => {
       try {
         let addedCount = 0;
+        let errorCount = 0;
         for (const row of results) {
-          await pool.query(
-            'INSERT INTO ejercicios (pregunta, palabras_clave, respuestas_aceptables, dificultad, categoria, pista) VALUES ($1, $2, $3, $4, $5, $6)',
-            [
-              row.pregunta,
-              row.palabras_clave ? row.palabras_clave.split(',').map(k => k.trim()) : [],
-              row.respuestas_aceptables ? row.respuestas_aceptables.split(',').map(a => a.trim()) : [],
-              row.dificultad,
-              row.categoria,
-              row.pista
-            ]
-          );
-          addedCount++;
+          const respuestasAceptables = row.respuestas_aceptables ? row.respuestas_aceptables.split(',').map(a => a.trim()) : [];
+          if (row.pregunta && respuestasAceptables.length > 0) {
+            await pool.query(
+              'INSERT INTO ejercicios (pregunta, palabras_clave, respuestas_aceptables, dificultad, categoria, pista) VALUES ($1, $2, $3, $4, $5, $6)',
+              [
+                row.pregunta,
+                row.palabras_clave ? row.palabras_clave.split(',').map(k => k.trim()) : [],
+                respuestasAceptables,
+                row.dificultad,
+                row.categoria,
+                row.pista
+              ]
+            );
+            addedCount++;
+          } else {
+            errorCount++;
+            console.error('Error: Ejercicio inválido', row);
+          }
         }
         fs.unlinkSync(req.file.path); // Delete the temporary file
-        res.status(200).json({ message: `CSV uploaded and processed successfully. ${addedCount} exercises added.` });
+        res.status(200).json({
+          message: `CSV procesado. ${addedCount} ejercicios agregados, ${errorCount} ejercicios inválidos.`,
+          addedCount,
+          errorCount
+        });
         io.emit('ejercicios_actualizados');
       } catch (error) {
         console.error('Error processing CSV:', error);

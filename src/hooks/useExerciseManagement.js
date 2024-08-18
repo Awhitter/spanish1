@@ -1,114 +1,98 @@
 import { useState, useEffect, useCallback } from 'react';
-import { isAnswerCorrect } from '../utils/textUtils';
-import io from 'socket.io-client';
 
-const socket = io('http://localhost:5000');
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000';
 
-const useExerciseManagement = () => {
+function useExerciseManagement() {
   const [ejercicios, setEjercicios] = useState([]);
-  const [ejercicioActual, setEjercicioActual] = useState(0);
+  const [ejercicioActual, setEjercicioActual] = useState(null);
   const [respuestaUsuario, setRespuestaUsuario] = useState('');
-  const [feedback, setFeedback] = useState('');
-  const [mostrarRespuestaCorrecta, setMostrarRespuestaCorrecta] = useState(false);
+  const [retroalimentacion, setRetroalimentacion] = useState('');
+  const [estadisticas, setEstadisticas] = useState({ correctas: 0, incorrectas: 0, saltadas: 0 });
   const [mostrarPista, setMostrarPista] = useState(false);
-  const [animateQuestion, setAnimateQuestion] = useState(false);
-  const [estadisticas, setEstadisticas] = useState({
-    respuestasCorrectas: 0,
-    respuestasIncorrectas: 0,
-    ejerciciosSaltados: 0,
-    currentExercise: 1,
-    totalExercises: 0,
-  });
+  const [error, setError] = useState(null);
 
-  const fetchExercises = useCallback(async () => {
+  const obtenerEjercicios = useCallback(async () => {
     try {
-      const response = await fetch('http://localhost:5000/exercises');
+      const response = await fetch(`${BACKEND_URL}/ejercicios`);
+      if (!response.ok) {
+        throw new Error('No se pudieron obtener los ejercicios');
+      }
       const data = await response.json();
-      setEjercicios(data);
-      setEstadisticas(prev => ({ ...prev, totalExercises: data.length }));
+      if (data.length > 0) {
+        setEjercicios(data);
+        setEjercicioActual(data[Math.floor(Math.random() * data.length)]);
+      } else {
+        setError('No hay ejercicios disponibles. Por favor, añade algunos ejercicios en la página de administración.');
+      }
     } catch (error) {
-      console.error('Error fetching exercises:', error);
+      console.error('Error al obtener ejercicios:', error);
+      setError('Error al cargar los ejercicios. Por favor, intente de nuevo más tarde.');
     }
   }, []);
 
   useEffect(() => {
-    fetchExercises();
+    obtenerEjercicios();
+  }, [obtenerEjercicios]);
 
-    socket.on('exercise_added', (newExercise) => {
-      setEjercicios(prevEjercicios => [...prevEjercicios, newExercise]);
-      setEstadisticas(prev => ({ ...prev, totalExercises: prev.totalExercises + 1 }));
-    });
+  const verificarRespuesta = useCallback(() => {
+    if (!ejercicioActual || !ejercicioActual.respuestas_aceptables || ejercicioActual.respuestas_aceptables.length === 0) {
+      setError('Error: El ejercicio actual no es válido. Por favor, contacte al administrador.');
+      return;
+    }
 
-    return () => {
-      socket.off('exercise_added');
-    };
-  }, [fetchExercises]);
+    const respuestasAceptables = ejercicioActual.respuestas_aceptables;
 
-  const handleInputChange = (e) => {
-    setRespuestaUsuario(e.target.value);
-  };
+    const respuestaUsuarioNormalizada = respuestaUsuario.toLowerCase().trim();
+    const respuestasAceptablesNormalizadas = respuestasAceptables.map(respuesta => 
+      respuesta.toLowerCase().trim()
+    );
 
-  const verificarRespuesta = () => {
-    const ejercicio = ejercicios[ejercicioActual];
-    if (isAnswerCorrect(respuestaUsuario, ejercicio.acceptableAnswers)) {
-      setFeedback('¡Correcto!');
-      setEstadisticas(prev => ({ ...prev, respuestasCorrectas: prev.respuestasCorrectas + 1 }));
-      setMostrarRespuestaCorrecta(true);
+    if (respuestasAceptablesNormalizadas.includes(respuestaUsuarioNormalizada)) {
+      setRetroalimentacion('¡Correcto!');
+      setEstadisticas(prev => ({ ...prev, correctas: prev.correctas + 1 }));
     } else {
-      setFeedback(`Incorrecto. La respuesta correcta es: ${ejercicio.acceptableAnswers[0]}`);
-      setEstadisticas(prev => ({ ...prev, respuestasIncorrectas: prev.respuestasIncorrectas + 1 }));
-      setMostrarRespuestaCorrecta(true);
+      setRetroalimentacion(`Incorrecto. La respuesta correcta es: ${respuestasAceptables.join(' o ')}`);
+      setEstadisticas(prev => ({ ...prev, incorrectas: prev.incorrectas + 1 }));
     }
-  };
+  }, [ejercicioActual, respuestaUsuario]);
 
-  const mostrarPistaHandler = () => {
-    setMostrarPista(true);
-  };
-
-  const siguienteEjercicio = () => {
-    if (ejercicioActual < ejercicios.length - 1) {
-      setEjercicioActual(prev => prev + 1);
-      setRespuestaUsuario('');
-      setFeedback('');
-      setMostrarRespuestaCorrecta(false);
-      setMostrarPista(false);
-      setAnimateQuestion(true);
-      setEstadisticas(prev => ({ ...prev, currentExercise: prev.currentExercise + 1 }));
-      setTimeout(() => setAnimateQuestion(false), 500);
-    }
-  };
-
-  const saltarEjercicio = () => {
-    setEstadisticas(prev => ({ ...prev, ejerciciosSaltados: prev.ejerciciosSaltados + 1 }));
-    siguienteEjercicio();
-  };
-
-  const reiniciarEjercicio = () => {
+  const siguienteEjercicio = useCallback(() => {
+    const siguienteEjercicio = ejercicios[Math.floor(Math.random() * ejercicios.length)];
+    setEjercicioActual(siguienteEjercicio);
     setRespuestaUsuario('');
-    setFeedback('');
-    setMostrarRespuestaCorrecta(false);
+    setRetroalimentacion('');
     setMostrarPista(false);
-  };
+    setError(null);
+  }, [ejercicios]);
 
-  const progreso = (ejercicioActual / ejercicios.length) * 100;
+  const manejarSaltar = useCallback(() => {
+    setEstadisticas(prev => ({ ...prev, saltadas: prev.saltadas + 1 }));
+    siguienteEjercicio();
+  }, [siguienteEjercicio]);
+
+  const manejarMostrarPista = useCallback(() => {
+    setMostrarPista(true);
+  }, []);
+
+  const reiniciarQuiz = useCallback(() => {
+    setEstadisticas({ correctas: 0, incorrectas: 0, saltadas: 0 });
+    siguienteEjercicio();
+  }, [siguienteEjercicio]);
 
   return {
-    ejercicio: ejercicios[ejercicioActual],
+    ejercicioActual,
     respuestaUsuario,
-    feedback,
-    mostrarRespuestaCorrecta,
-    mostrarPista,
-    animateQuestion,
+    retroalimentacion,
     estadisticas,
-    progreso,
-    handleInputChange,
+    mostrarPista,
+    error,
+    setRespuestaUsuario,
     verificarRespuesta,
-    mostrarPistaHandler,
     siguienteEjercicio,
-    saltarEjercicio,
-    reiniciarEjercicio,
-    fetchExercises,
+    manejarSaltar,
+    manejarMostrarPista,
+    reiniciarQuiz,
   };
-};
+}
 
 export default useExerciseManagement;
