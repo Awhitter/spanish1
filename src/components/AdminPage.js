@@ -116,17 +116,29 @@ function AdminPage() {
   };
 
   const manejarEditarEjercicio = (ejercicio) => {
-    setEjercicioEditando({ ...ejercicio });
+    setEjercicioEditando({
+      ...ejercicio,
+      palabras_clave: ejercicio.palabras_clave || [],
+      respuestas_aceptables: ejercicio.respuestas_aceptables || []
+    });
   };
 
   const manejarActualizarEjercicio = useCallback(async (ejercicioActualizado) => {
     try {
+      const dataToSend = {
+        ...ejercicioActualizado,
+        palabrasClave: ejercicioActualizado.palabras_clave,
+        respuestasAceptables: ejercicioActualizado.respuestas_aceptables
+      };
+      delete dataToSend.palabras_clave;
+      delete dataToSend.respuestas_aceptables;
+
       const response = await fetch(`${BACKEND_URL}/ejercicios/${ejercicioActualizado.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(ejercicioActualizado),
+        body: JSON.stringify(dataToSend),
       });
       if (!response.ok) {
         const errorData = await response.json();
@@ -313,6 +325,11 @@ function AdminPage() {
                     placeholder="Pregunta"
                   />
                   <input
+                    value={ejercicioEditando.palabras_clave ? ejercicioEditando.palabras_clave.join(', ') : ''}
+                    onChange={(e) => setEjercicioEditando({...ejercicioEditando, palabras_clave: e.target.value.split(',').map(k => k.trim())})}
+                    placeholder="Palabras Clave"
+                  />
+                  <input
                     value={ejercicioEditando.respuestas_aceptables ? ejercicioEditando.respuestas_aceptables.join(', ') : ''}
                     onChange={(e) => setEjercicioEditando({...ejercicioEditando, respuestas_aceptables: e.target.value.split(',').map(a => a.trim())})}
                     placeholder="Respuestas Aceptables"
@@ -343,7 +360,8 @@ function AdminPage() {
               ) : (
                 <div className="ejercicio-view">
                   <h4>{ejercicio.pregunta}</h4>
-                  <p><strong>Respuestas:</strong> {ejercicio.respuestas_aceptables ? ejercicio.respuestas_aceptables.join(', ') : ''}</p>
+                  <p><strong>Palabras Clave:</strong> {ejercicio.palabras_clave ? ejercicio.palabras_clave.join(', ') : 'N/A'}</p>
+                  <p><strong>Respuestas:</strong> {ejercicio.respuestas_aceptables ? ejercicio.respuestas_aceptables.join(', ') : 'N/A'}</p>
                   <p><strong>Dificultad:</strong> {ejercicio.dificultad}</p>
                   <p><strong>Categoría:</strong> {ejercicio.categoria}</p>
                   <p><strong>Pista:</strong> {ejercicio.pista}</p>

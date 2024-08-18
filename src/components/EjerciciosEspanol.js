@@ -15,6 +15,7 @@ function EjerciciosEspanol() {
   const [mostrarPista, setMostrarPista] = useState(false);
   const [animacionSalida, setAnimacionSalida] = useState(false);
   const [progreso, setProgreso] = useState(0);
+  const [error, setError] = useState(null);
 
   const obtenerEjercicios = useCallback(async () => {
     try {
@@ -26,9 +27,12 @@ function EjerciciosEspanol() {
       setEjercicios(data);
       if (data.length > 0) {
         setEjercicioActual(data[Math.floor(Math.random() * data.length)]);
+      } else {
+        setError('No hay ejercicios disponibles');
       }
     } catch (error) {
       console.error('Error al obtener ejercicios:', error);
+      setError('Error al cargar los ejercicios. Por favor, intente de nuevo más tarde.');
     }
   }, []);
 
@@ -43,11 +47,20 @@ function EjerciciosEspanol() {
   }, [estadisticas, ejercicios]);
 
   const verificarRespuesta = useCallback(() => {
-    if (ejercicioActual.respuestas_aceptables.includes(respuestaUsuario.toLowerCase().trim())) {
+    if (!ejercicioActual || !ejercicioActual.respuestas_aceptables) {
+      setError('Error: El ejercicio actual no es válido');
+      return;
+    }
+
+    const respuestasAceptables = Array.isArray(ejercicioActual.respuestas_aceptables) 
+      ? ejercicioActual.respuestas_aceptables 
+      : [ejercicioActual.respuestas_aceptables];
+
+    if (respuestasAceptables.some(respuesta => respuestaUsuario.toLowerCase().trim() === respuesta.toLowerCase().trim())) {
       setRetroalimentacion('¡Correcto!');
       setEstadisticas(prev => ({ ...prev, correctas: prev.correctas + 1 }));
     } else {
-      setRetroalimentacion(`Incorrecto. La respuesta correcta es: ${ejercicioActual.respuestas_aceptables.join(' o ')}`);
+      setRetroalimentacion(`Incorrecto. La respuesta correcta es: ${respuestasAceptables.join(' o ')}`);
       setEstadisticas(prev => ({ ...prev, incorrectas: prev.incorrectas + 1 }));
     }
   }, [ejercicioActual, respuestaUsuario]);
@@ -66,6 +79,7 @@ function EjerciciosEspanol() {
       setRetroalimentacion('');
       setMostrarPista(false);
       setAnimacionSalida(false);
+      setError(null);
     }, 300);
   }, [ejercicios]);
 
@@ -101,6 +115,10 @@ function EjerciciosEspanol() {
       document.removeEventListener('keydown', manejarTeclas);
     };
   }, [manejarTeclas]);
+
+  if (error) {
+    return <div className="error">{error}</div>;
+  }
 
   if (!ejercicioActual) {
     return <div className="loading">Cargando ejercicios...</div>;
