@@ -30,6 +30,7 @@
   border-radius: 8px;
   padding: 20px;
   margin-bottom: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .ejercicio-info {
@@ -76,17 +77,9 @@ input[type="text"] {
   color: white;
 }
 
-.btn-primary:hover {
-  background-color: #45a049;
-}
-
 .btn-secondary {
   background-color: #008CBA;
   color: white;
-}
-
-.btn-secondary:hover {
-  background-color: #007B9A;
 }
 
 .btn-warning {
@@ -94,8 +87,8 @@ input[type="text"] {
   color: white;
 }
 
-.btn-warning:hover {
-  background-color: #e68a00;
+.btn:hover {
+  opacity: 0.8;
 }
 
 .botones-container {
@@ -160,6 +153,69 @@ input[type="text"] {
   margin: 0 10px;
 }
 
+/* Dark mode styles */
+.dark-mode {
+  background-color: #333;
+  color: #f0f0f0;
+}
+
+.dark-mode .contenedor-ejercicio {
+  background-color: #444;
+  border-color: #555;
+  box-shadow: 0 2px 4px rgba(255, 255, 255, 0.1);
+}
+
+.dark-mode .nivel {
+  color: #bbb;
+}
+
+.dark-mode input[type="text"] {
+  background-color: #555;
+  border-color: #666;
+  color: #f0f0f0;
+}
+
+.dark-mode .btn-primary {
+  background-color: #45a049;
+}
+
+.dark-mode .btn-secondary {
+  background-color: #0077be;
+}
+
+.dark-mode .btn-warning {
+  background-color: #e68a00;
+}
+
+.dark-mode .pista {
+  color: #bbb;
+}
+
+.dark-mode .correcta {
+  background-color: #1e4620;
+  color: #a3d7a5;
+}
+
+.dark-mode .incorrecta {
+  background-color: #4c1d1b;
+  color: #e9a8a6;
+}
+
+.dark-mode .estadisticas {
+  background-color: #444;
+  border-color: #555;
+}
+
+.dark-mode .module-complete {
+  background-color: #444;
+  border-color: #555;
+}
+
+.dark-mode .module-complete h2 {
+  color: #4CAF50;
+}
+
+/* Animations */
 .fade-enter {
   opacity: 0;
 }
@@ -197,4 +253,15 @@ input[type="text"] {
   opacity: 0;
   transform: translateY(-20px);
   transition: opacity 300ms, transform 300ms;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .botones-container {
+    flex-direction: column;
+  }
+
+  .botones-container button {
+    margin-bottom: 10px;
+  }
 }
