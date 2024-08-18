@@ -1,71 +1,52 @@
-:root {
-  --primary-color: #3498db;
-  --secondary-color: #2ecc71;
-  --background-color: #f5f7fa;
-  --text-color: #2c3e50;
-  --button-text: #fff;
-  --button-hover: #2980b9;
-  --success-color: #27ae60;
-  --error-color: #e74c3c;
-  --input-bg: #fff;
-  --input-border: #bdc3c7;
-  --hover-bg: rgba(52, 152, 219, 0.1);
-}
-
-.dark-mode {
-  --primary-color: #3498db;
-  --secondary-color: #2ecc71;
-  --background-color: #2c3e50;
-  --text-color: #ecf0f1;
-  --button-text: #ecf0f1;
-  --button-hover: #2980b9;
-  --success-color: #27ae60;
-  --error-color: #e74c3c;
-  --input-bg: #34495e;
-  --input-border: #7f8c8d;
-  --hover-bg: rgba(236, 240, 241, 0.1);
-}
-
-body {
-  font-family: 'Arial', sans-serif;
-  background-color: var(--background-color);
-  color: var(--text-color);
-  transition: background-color 0.3s ease, color 0.3s ease;
-  line-height: 1.6;
-}
-
 .ejercicios-espanol {
   max-width: 800px;
   margin: 0 auto;
   padding: 20px;
 }
 
-h2 {
+.ejercicios-espanol h2 {
   text-align: center;
-  color: var(--primary-color);
-  font-size: 2.5rem;
-  margin-bottom: 30px;
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+}
+
+.barra-progreso {
+  width: 100%;
+  height: 10px;
+  background-color: #e0e0e0;
+  border-radius: 5px;
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+
+.progreso {
+  height: 100%;
+  background-color: #4CAF50;
+  transition: width 0.3s ease;
 }
 
 .contenedor-ejercicio {
-  background-color: rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
-  padding: 30px;
-  margin-bottom: 30px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  transition: box-shadow 0.3s ease;
+  background-color: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
 }
 
-.contenedor-ejercicio:hover {
-  box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+.ejercicio-info {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.nivel {
+  font-size: 14px;
+  color: #666;
 }
 
 .pregunta {
-  font-size: 1.4rem;
+  font-size: 18px;
+  font-weight: bold;
   margin-bottom: 20px;
-  line-height: 1.6;
-  font-weight: 500;
 }
 
 form {
@@ -75,160 +56,117 @@ form {
 
 input[type="text"] {
   flex-grow: 1;
-  padding: 12px;
-  font-size: 1.1rem;
-  border: 2px solid var(--input-border);
-  border-radius: 5px 0 0 5px;
-  background-color: var(--input-bg);
-  color: var(--text-color);
-  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  padding: 10px;
+  font-size: 16px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
 }
 
-input[type="text"]:focus {
-  outline: none;
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.3);
-}
-
-button {
-  padding: 12px 24px;
-  font-size: 1.1rem;
-  background-color: var(--primary-color);
-  color: var(--button-text);
+.btn {
+  padding: 10px 20px;
+  font-size: 16px;
   border: none;
-  border-radius: 5px;
+  border-radius: 4px;
   cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+  transition: background-color 0.3s ease;
 }
 
-button:hover {
-  background-color: var(--button-hover);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+.btn-primary {
+  background-color: #4CAF50;
+  color: white;
 }
 
-button:active {
-  transform: translateY(0);
-  box-shadow: none;
+.btn-primary:hover {
+  background-color: #45a049;
+}
+
+.btn-secondary {
+  background-color: #008CBA;
+  color: white;
+}
+
+.btn-secondary:hover {
+  background-color: #007B9A;
+}
+
+.btn-warning {
+  background-color: #ff9800;
+  color: white;
+}
+
+.btn-warning:hover {
+  background-color: #e68a00;
 }
 
 .botones-container {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 20px;
-}
-
-.btn {
-  flex: 1;
-  margin: 0 5px;
-  border-radius: 5px;
-  font-weight: bold;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-
-.btn-primary {
-  background-color: var(--primary-color);
-}
-
-.btn-secondary {
-  background-color: var(--secondary-color);
-}
-
-.btn-warning {
-  background-color: var(--error-color);
+  margin-top: 20px;
 }
 
 .pista {
+  margin-top: 20px;
   font-style: italic;
-  margin-bottom: 20px;
-  padding: 15px;
-  background-color: var(--hover-bg);
-  border-left: 4px solid var(--secondary-color);
-  border-radius: 4px;
-  transition: background-color 0.3s ease;
-}
-
-.pista:hover {
-  background-color: rgba(46, 204, 113, 0.1);
+  color: #666;
 }
 
 .retroalimentacion {
-  padding: 15px;
-  border-radius: 5px;
-  text-align: center;
+  margin-top: 20px;
+  padding: 10px;
+  border-radius: 4px;
   font-weight: bold;
-  margin-bottom: 20px;
-  font-size: 1.2rem;
-  transition: background-color 0.3s ease, transform 0.3s ease;
 }
 
-.retroalimentacion:hover {
-  transform: translateY(-2px);
+.correcta {
+  background-color: #dff0d8;
+  color: #3c763d;
 }
 
-.retroalimentacion.correcta {
-  background-color: var(--success-color);
-  color: var(--button-text);
-}
-
-.retroalimentacion.incorrecta {
-  background-color: var(--error-color);
-  color: var(--button-text);
-}
-
-.barra-progreso {
-  width: 100%;
-  height: 10px;
-  background-color: rgba(255, 255, 255, 0.2);
-  border-radius: 5px;
-  overflow: hidden;
-  margin-bottom: 20px;
-}
-
-.progreso {
-  height: 100%;
-  background-color: var(--primary-color);
-  transition: width 0.3s ease;
+.incorrecta {
+  background-color: #f2dede;
+  color: #a94442;
 }
 
 .estadisticas {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 30px;
-  font-size: 1rem;
-  background-color: var(--hover-bg);
-  padding: 15px;
-  border-radius: 5px;
-  transition: background-color 0.3s ease;
+  background-color: #f0f0f0;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 20px;
+  margin-top: 20px;
 }
 
-.estadisticas:hover {
-  background-color: rgba(52, 152, 219, 0.2);
+.estadisticas p {
+  margin: 5px 0;
 }
 
-.error, .loading {
+.module-complete {
   text-align: center;
-  font-size: 1.4rem;
-  margin-top: 50px;
-  color: var(--error-color);
-  animation: fadeIn 0.5s ease-in-out;
+  padding: 40px;
+  background-color: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 8px;
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-20px); }
-  to { opacity: 1; transform: translateY(0); }
+.module-complete h2 {
+  color: #4CAF50;
+  margin-bottom: 20px;
+}
+
+.module-complete-actions {
+  margin-top: 20px;
+}
+
+.module-complete-actions button {
+  margin: 0 10px;
 }
 
 .fade-enter {
   opacity: 0;
-  transform: translateY(20px);
 }
 
 .fade-enter-active {
   opacity: 1;
-  transform: translateY(0);
-  transition: opacity 300ms ease-in, transform 300ms ease-in;
+  transition: opacity 300ms ease-in;
 }
 
 .fade-exit {
@@ -237,69 +175,26 @@ button:active {
 
 .fade-exit-active {
   opacity: 0;
+  transition: opacity 300ms ease-in;
+}
+
+.feedback-enter {
+  opacity: 0;
   transform: translateY(-20px);
-  transition: opacity 300ms ease-in, transform 300ms ease-in;
 }
 
-/* Ensure text is readable when hovered over in both light and dark modes */
-.ejercicios-espanol *:hover {
-  color: var(--text-color);
+.feedback-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 300ms, transform 300ms;
 }
 
-@media (max-width: 600px) {
-  .botones-container {
-    flex-direction: column;
-  }
-
-  .btn {
-    margin: 5px 0;
-  }
-
-  input[type="text"], button {
-    font-size: 1rem;
-    padding: 10px;
-  }
-
-  .pregunta {
-    font-size: 1.2rem;
-  }
-
-  .retroalimentacion {
-    font-size: 1.1rem;
-  }
+.feedback-exit {
+  opacity: 1;
 }
 
-/* Add subtle animations */
-@keyframes pulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-  100% { transform: scale(1); }
-}
-
-.btn:hover {
-  animation: pulse 0.5s ease-in-out;
-}
-
-.contenedor-ejercicio {
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-/* Improve accessibility */
-button:focus, input:focus {
-  outline: 3px solid var(--primary-color);
-  outline-offset: 2px;
-}
-
-/* Add a subtle background pattern for visual interest */
-body::before {
-  content: '';
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-image: radial-gradient(var(--hover-bg) 1px, transparent 1px);
-  background-size: 20px 20px;
-  opacity: 0.5;
-  z-index: -1;
+.feedback-exit-active {
+  opacity: 0;
+  transform: translateY(-20px);
+  transition: opacity 300ms, transform 300ms;
 }

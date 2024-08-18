@@ -150,12 +150,12 @@ function AdminPage() {
       <h2>Administración de Ejercicios</h2>
       {message && <p className="message">{message}</p>}
       <form onSubmit={handleSubmit} className="exercise-form">
-        <input
-          type="text"
+        <textarea
           value={pregunta}
           onChange={(e) => setPregunta(e.target.value)}
           placeholder="Pregunta"
           required
+          rows="3"
         />
         <input
           type="text"
@@ -170,12 +170,16 @@ function AdminPage() {
           placeholder="Respuestas aceptables (separadas por comas)"
           required
         />
-        <input
-          type="text"
+        <select
           value={dificultad}
           onChange={(e) => setDificultad(e.target.value)}
-          placeholder="Dificultad"
-        />
+          required
+        >
+          <option value="">Selecciona la dificultad</option>
+          <option value="fácil">Fácil</option>
+          <option value="medio">Medio</option>
+          <option value="difícil">Difícil</option>
+        </select>
         <input
           type="text"
           value={categoria}
@@ -201,20 +205,30 @@ function AdminPage() {
         )}
       </form>
 
-      <form onSubmit={handleFileUpload} className="file-upload-form">
-        <input type="file" onChange={handleFileChange} accept=".csv" />
-        <button type="submit">Subir CSV</button>
-      </form>
+      <div className="csv-upload">
+        <h3>Subir archivo CSV</h3>
+        <p>El archivo CSV debe tener las siguientes columnas: pregunta, palabras_clave, respuestas_aceptables, dificultad, categoria, pista, modulo</p>
+        <form onSubmit={handleFileUpload} className="file-upload-form">
+          <input type="file" onChange={handleFileChange} accept=".csv" />
+          <button type="submit">Subir CSV</button>
+        </form>
+      </div>
 
       <div className="exercise-list">
         <h3>Ejercicios Existentes</h3>
         {ejercicios.map((ejercicio) => (
           <div key={ejercicio.id} className="exercise-item">
-            <p><strong>Pregunta:</strong> {ejercicio.pregunta}</p>
+            <h4>Pregunta: {ejercicio.pregunta}</h4>
             <p><strong>Módulo:</strong> {ejercicio.modulo}</p>
             <p><strong>Respuestas:</strong> {ejercicio.respuestas_aceptables}</p>
-            <button onClick={() => handleEdit(ejercicio)}>Editar</button>
-            <button onClick={() => handleDelete(ejercicio.id)}>Eliminar</button>
+            <p><strong>Dificultad:</strong> {ejercicio.dificultad}</p>
+            <p><strong>Categoría:</strong> {ejercicio.categoria}</p>
+            <p><strong>Pista:</strong> {ejercicio.pista}</p>
+            <p><strong>Última actualización:</strong> {new Date(ejercicio.updated_at).toLocaleString()}</p>
+            <div className="exercise-actions">
+              <button onClick={() => handleEdit(ejercicio)}>Editar</button>
+              <button onClick={() => handleDelete(ejercicio.id)}>Eliminar</button>
+            </div>
           </div>
         ))}
       </div>

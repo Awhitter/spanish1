@@ -54,7 +54,9 @@ async function initializeDatabase() {
         dificultad TEXT,
         categoria TEXT,
         pista TEXT,
-        modulo TEXT
+        modulo TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
     console.log('Tabla de ejercicios creada');
@@ -129,11 +131,19 @@ const errorHandler = (res, error, message) => {
   res.status(500).json({ error: 'Error interno del servidor', detalles: error.message });
 };
 
-// Add a new endpoint to get all modules
+// Add a new endpoint to get all modules with exercise count and last updated date
 app.get('/modulos', async (req, res) => {
   try {
-    const result = await pool.query('SELECT DISTINCT modulo FROM ejercicios ORDER BY modulo');
-    res.json(result.rows.map(row => row.modulo));
+    const result = await pool.query(`
+      SELECT 
+        modulo as name, 
+        COUNT(*) as count, 
+        MAX(updated_at) as lastUpdated
+      FROM ejercicios 
+      GROUP BY modulo 
+      ORDER BY modulo
+    `);
+    res.json(result.rows);
   } catch (error) {
     errorHandler(res, error, 'Error al obtener módulos:');
   }
@@ -188,7 +198,7 @@ app.put('/ejercicios/:id', async (req, res) => {
 
   try {
     const result = await pool.query(
-      'UPDATE ejercicios SET pregunta = $1, palabras_clave = $2, respuestas_aceptables = $3, dificultad = $4, categoria = $5, pista = $6, modulo = $7 WHERE id = $8 RETURNING *',
+      'UPDATE ejercicios SET pregunta = $1, palabras_clave = $2, respuestas_aceptables = $3, dificultad = $4, categoria = $5, pista = $6, modulo = $7, updated_at = CURRENT_TIMESTAMP WHERE id = $8 RETURNING *',
       [pregunta, palabras_clave, respuestas_aceptables, dificultad, categoria, pista, modulo, id]
     );
     if (result.rows.length === 0) {

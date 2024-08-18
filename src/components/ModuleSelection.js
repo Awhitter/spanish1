@@ -13,7 +13,7 @@ function ModuleSelection() {
     fetch(`${BACKEND_URL}/modulos`)
       .then(response => {
         if (!response.ok) {
-          throw new Error('Failed to fetch modules');
+          throw new Error('Error al cargar los módulos');
         }
         return response.json();
       })
@@ -23,13 +23,13 @@ function ModuleSelection() {
       })
       .catch(error => {
         console.error('Error fetching modules:', error);
-        setError('Failed to load modules. Please try again later.');
+        setError('No se pudieron cargar los módulos. Por favor, inténtelo de nuevo más tarde.');
         setLoading(false);
       });
   }, []);
 
   if (loading) {
-    return <div className="loading">Loading modules...</div>;
+    return <div className="loading">Cargando módulos...</div>;
   }
 
   if (error) {
@@ -37,16 +37,19 @@ function ModuleSelection() {
   }
 
   if (modules.length === 0) {
-    return <div className="no-modules">No modules available. Please add some exercises first.</div>;
+    return <div className="no-modules">No hay módulos disponibles. Por favor, agregue algunos ejercicios primero.</div>;
   }
 
   return (
     <div className="module-selection">
-      <h2>Select a Module</h2>
+      <h2>Selecciona un Módulo</h2>
+      <p className="module-info">Puedes agregar nuevos módulos al crear ejercicios con nombres de módulos nuevos.</p>
       <div className="module-list">
         {modules.map((module, index) => (
-          <Link key={index} to={`/module/${encodeURIComponent(module)}`} className="module-button">
-            {module}
+          <Link key={index} to={`/module/${encodeURIComponent(module.name)}`} className="module-button">
+            <h3>{module.name}</h3>
+            <p>Ejercicios: {module.count}</p>
+            <p>Última actualización: {new Date(module.lastUpdated).toLocaleDateString()}</p>
           </Link>
         ))}
       </div>

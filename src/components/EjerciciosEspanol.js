@@ -90,8 +90,10 @@ function EjerciciosEspanol() {
       <div className="module-complete">
         <h2>¡Felicidades!</h2>
         <p>Has completado todos los ejercicios en este módulo.</p>
-        <button onClick={() => navigate('/')} className="btn btn-primary">Volver al inicio</button>
-        <button onClick={reiniciarQuiz} className="btn btn-secondary">Reiniciar módulo</button>
+        <div className="module-complete-actions">
+          <button onClick={() => navigate('/')} className="btn btn-primary">Volver al inicio</button>
+          <button onClick={reiniciarQuiz} className="btn btn-secondary">Reiniciar módulo</button>
+        </div>
       </div>
     );
   }
@@ -109,7 +111,9 @@ function EjerciciosEspanol() {
         unmountOnExit
       >
         <div className="contenedor-ejercicio">
-          <h3>Nivel: {ejercicioActual.dificultad}</h3>
+          <div className="ejercicio-info">
+            <span className="nivel">Nivel: {ejercicioActual.dificultad}</span>
+          </div>
           <p className="pregunta">{ejercicioActual.pregunta}</p>
           <form onSubmit={manejarEnvio}>
             <input
