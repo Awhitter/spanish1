@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback, useContext, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { CSSTransition } from 'react-transition-group';
-import { Player } from '@lottiefiles/react-lottie-player';
 import { DarkModeContext } from '../App';
 import useExerciseManagement from '../hooks/useExerciseManagement';
 import './EjerciciosEspanol.css';
@@ -90,12 +89,14 @@ function EjerciciosEspanol() {
   if (!ejercicioActual) {
     return (
       <div className="loading">
-        <Player
-          autoplay
-          loop
+        <dotlottie-player
           src="https://lottie.host/4cdef2e6-3fad-49aa-abea-2abe18a10962/FUGGRSDYDh.json"
-          style={{ height: '300px', width: '300px' }}
-        />
+          background="transparent"
+          speed="1"
+          style={{ width: '300px', height: '300px' }}
+          loop
+          autoplay
+        ></dotlottie-player>
         <p>Cargando ejercicios...</p>
       </div>
     );
@@ -106,12 +107,13 @@ function EjerciciosEspanol() {
       <div className="module-complete">
         <h2>¡Felicidades!</h2>
         <p>Has completado todos los ejercicios en este módulo.</p>
-        <Player
-          autoplay
-          loop
+        <dotlottie-player
           src="https://lottie.host/dfea151d-82eb-48c5-b01c-6f59ec4c9488/BhCdCrapss.json"
-          style={{ height: '300px', width: '300px' }}
-        />
+          background="transparent"
+          speed="1"
+          style={{ width: '400px', height: '400px' }}
+          autoplay
+        ></dotlottie-player>
         <div className="module-complete-actions">
           <button onClick={() => navigate('/')} className="btn btn-primary">Volver al inicio</button>
           <button onClick={reiniciarQuiz} className="btn btn-secondary">Reiniciar módulo</button>
@@ -178,12 +180,13 @@ function EjerciciosEspanol() {
       </div>
       {showCorrectAnimation && (
         <div className="correct-animation">
-          <Player
-            autoplay
-            loop={false}
+          <dotlottie-player
             src="https://lottie.host/a6cffb61-fa41-46e8-bb29-5fa9e33b16fe/PQXLfM8tRt.json"
-            style={{ height: '200px', width: '200px' }}
-          />
+            background="transparent"
+            speed="1"
+            style={{ width: '300px', height: '300px' }}
+            autoplay
+          ></dotlottie-player>
         </div>
       )}
     </div>

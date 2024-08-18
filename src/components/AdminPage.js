@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Player } from '@lottiefiles/react-lottie-player';
 import './AdminPage.css';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000';
@@ -163,12 +162,14 @@ function AdminPage() {
     return (
       <div className="admin-login">
         <h2>Iniciar sesión de administrador</h2>
-        <Player
-          autoplay
-          loop
+        <dotlottie-player
           src="https://lottie.host/89ac2690-0d2f-4655-90ad-3f7434371de8/wfBnzQud2H.json"
-          style={{ height: '200px', width: '200px' }}
-        />
+          background="transparent"
+          speed="1"
+          style={{ width: '200px', height: '200px' }}
+          loop
+          autoplay
+        ></dotlottie-player>
         <form onSubmit={handleLogin}>
           <input
             type="password"
@@ -199,103 +200,105 @@ function AdminPage() {
       </div>
 
       {message && <p className="message">{message}</p>}
-      <form onSubmit={handleSubmit} className="exercise-form">
-        <div className="form-group">
-          <label htmlFor="pregunta">Pregunta:</label>
-          <textarea
-            id="pregunta"
-            value={pregunta}
-            onChange={(e) => setPregunta(e.target.value)}
-            placeholder="Pregunta"
-            required
-            rows="4"
-          />
-        </div>
-        <div className="form-row">
+      <div className="admin-content">
+        <form onSubmit={handleSubmit} className="exercise-form">
           <div className="form-group">
-            <label htmlFor="palabrasClave">Palabras clave:</label>
-            <input
-              id="palabrasClave"
-              type="text"
-              value={palabrasClave}
-              onChange={(e) => setPalabrasClave(e.target.value)}
-              placeholder="Separadas por comas"
-            />
-          </div>
-          <div className="form-group">
-            <label htmlFor="respuestasAceptables">Respuestas aceptables:</label>
-            <input
-              id="respuestasAceptables"
-              type="text"
-              value={respuestasAceptables}
-              onChange={(e) => setRespuestasAceptables(e.target.value)}
-              placeholder="Separadas por comas"
+            <label htmlFor="pregunta">Pregunta:</label>
+            <textarea
+              id="pregunta"
+              value={pregunta}
+              onChange={(e) => setPregunta(e.target.value)}
+              placeholder="Pregunta"
               required
+              rows="4"
             />
           </div>
-        </div>
-        <div className="form-row">
-          <div className="form-group">
-            <label htmlFor="dificultad">Dificultad:</label>
-            <select
-              id="dificultad"
-              value={dificultad}
-              onChange={(e) => setDificultad(e.target.value)}
-              required
-            >
-              <option value="">Selecciona la dificultad</option>
-              <option value="fácil">Fácil</option>
-              <option value="medio">Medio</option>
-              <option value="difícil">Difícil</option>
-            </select>
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="palabrasClave">Palabras clave:</label>
+              <input
+                id="palabrasClave"
+                type="text"
+                value={palabrasClave}
+                onChange={(e) => setPalabrasClave(e.target.value)}
+                placeholder="Separadas por comas"
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="respuestasAceptables">Respuestas aceptables:</label>
+              <input
+                id="respuestasAceptables"
+                type="text"
+                value={respuestasAceptables}
+                onChange={(e) => setRespuestasAceptables(e.target.value)}
+                placeholder="Separadas por comas"
+                required
+              />
+            </div>
           </div>
-          <div className="form-group">
-            <label htmlFor="categoria">Categoría:</label>
-            <input
-              id="categoria"
-              type="text"
-              value={categoria}
-              onChange={(e) => setCategoria(e.target.value)}
-              placeholder="Categoría"
-            />
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="dificultad">Dificultad:</label>
+              <select
+                id="dificultad"
+                value={dificultad}
+                onChange={(e) => setDificultad(e.target.value)}
+                required
+              >
+                <option value="">Selecciona la dificultad</option>
+                <option value="fácil">Fácil</option>
+                <option value="medio">Medio</option>
+                <option value="difícil">Difícil</option>
+              </select>
+            </div>
+            <div className="form-group">
+              <label htmlFor="categoria">Categoría:</label>
+              <input
+                id="categoria"
+                type="text"
+                value={categoria}
+                onChange={(e) => setCategoria(e.target.value)}
+                placeholder="Categoría"
+              />
+            </div>
           </div>
-        </div>
-        <div className="form-row">
-          <div className="form-group">
-            <label htmlFor="pista">Pista:</label>
-            <input
-              id="pista"
-              type="text"
-              value={pista}
-              onChange={(e) => setPista(e.target.value)}
-              placeholder="Pista"
-            />
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="pista">Pista:</label>
+              <input
+                id="pista"
+                type="text"
+                value={pista}
+                onChange={(e) => setPista(e.target.value)}
+                placeholder="Pista"
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="modulo">Módulo:</label>
+              <input
+                id="modulo"
+                type="text"
+                value={modulo}
+                onChange={(e) => setModulo(e.target.value)}
+                placeholder="Módulo"
+                required
+              />
+            </div>
           </div>
-          <div className="form-group">
-            <label htmlFor="modulo">Módulo:</label>
-            <input
-              id="modulo"
-              type="text"
-              value={modulo}
-              onChange={(e) => setModulo(e.target.value)}
-              placeholder="Módulo"
-              required
-            />
-          </div>
-        </div>
-        <button type="submit" className="btn btn-primary">{editingId ? 'Actualizar' : 'Agregar'} Ejercicio</button>
-        {editingId && (
-          <button type="button" onClick={clearForm} className="btn btn-secondary">Cancelar Edición</button>
-        )}
-      </form>
-
-      <div className="csv-upload">
-        <h3>Subir archivo CSV</h3>
-        <p>El archivo CSV debe tener las siguientes columnas: pregunta, palabras_clave, respuestas_aceptables, dificultad, categoria, pista, modulo</p>
-        <form onSubmit={handleFileUpload} className="file-upload-form">
-          <input type="file" onChange={handleFileChange} accept=".csv" />
-          <button type="submit" className="btn btn-primary">Subir CSV</button>
+          <button type="submit" className="btn btn-primary">{editingId ? 'Actualizar' : 'Agregar'} Ejercicio</button>
+          {editingId && (
+            <button type="button" onClick={clearForm} className="btn btn-secondary">Cancelar Edición</button>
+          )}
         </form>
+
+        <div className="csv-upload">
+          <h3>Subir archivo CSV</h3>
+          <p>El archivo CSV debe tener las siguientes columnas: pregunta, palabras_clave, respuestas_aceptables, dificultad, categoria, pista, modulo</p>
+          <form onSubmit={handleFileUpload} className="file-upload-form">
+            <input type="file" onChange={handleFileChange} accept=".csv" />
+            <button type="submit" className="btn btn-primary">Subir CSV</button>
+          </form>
+        </div>
       </div>
 
       <div className="exercise-list">

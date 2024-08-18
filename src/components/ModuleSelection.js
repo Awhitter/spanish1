@@ -56,7 +56,7 @@ function ModuleSelection() {
           <Link key={index} to={`/module/${encodeURIComponent(module.name)}`} className="module-button">
             <h3>{module.name}</h3>
             <p>Ejercicios: {module.count}</p>
-            <p>Última actualización: {new Date(module.lastUpdated).toLocaleDateString()}</p>
+            <p>Última actualización: {new Date(module.lastUpdated).toLocaleString()}</p>
           </Link>
         ))}
       </div>

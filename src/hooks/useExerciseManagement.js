@@ -10,6 +10,7 @@ function useExerciseManagement(moduleId) {
   const [estadisticas, setEstadisticas] = useState({ correctas: 0, incorrectas: 0, saltadas: 0 });
   const [mostrarPista, setMostrarPista] = useState(false);
   const [error, setError] = useState(null);
+  const [ejerciciosCompletados, setEjerciciosCompletados] = useState([]);
 
   const obtenerEjerciciosPorModulo = useCallback(async (moduleId) => {
     try {
@@ -60,10 +61,12 @@ function useExerciseManagement(moduleId) {
       setRetroalimentacion(`Incorrecto. La respuesta correcta es: ${respuestasAceptables.join(' o ')}`);
       setEstadisticas(prev => ({ ...prev, incorrectas: prev.incorrectas + 1 }));
     }
+
+    setEjerciciosCompletados(prev => [...prev, ejercicioActual.id]);
   }, [ejercicioActual, respuestaUsuario]);
 
   const siguienteEjercicio = useCallback(() => {
-    const ejerciciosRestantes = ejercicios.filter(ej => ej.id !== ejercicioActual.id);
+    const ejerciciosRestantes = ejercicios.filter(ej => !ejerciciosCompletados.includes(ej.id));
     if (ejerciciosRestantes.length > 0) {
       const siguienteEjercicio = ejerciciosRestantes[Math.floor(Math.random() * ejerciciosRestantes.length)];
       setEjercicioActual(siguienteEjercicio);
@@ -74,17 +77,19 @@ function useExerciseManagement(moduleId) {
     setRetroalimentacion('');
     setMostrarPista(false);
     setError(null);
-  }, [ejercicios, ejercicioActual]);
+  }, [ejercicios, ejerciciosCompletados]);
 
   const manejarSaltar = useCallback(() => {
     setEstadisticas(prev => ({ ...prev, saltadas: prev.saltadas + 1 }));
+    setEjerciciosCompletados(prev => [...prev, ejercicioActual.id]);
     siguienteEjercicio();
-  }, [siguienteEjercicio]);
+  }, [siguienteEjercicio, ejercicioActual]);
 
   const manejarMostrarPista = useCallback(() => setMostrarPista(true), []);
 
   const reiniciarQuiz = useCallback(() => {
     setEstadisticas({ correctas: 0, incorrectas: 0, saltadas: 0 });
+    setEjerciciosCompletados([]);
     if (ejercicios.length > 0) {
       setEjercicioActual(ejercicios[Math.floor(Math.random() * ejercicios.length)]);
     }
