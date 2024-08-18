@@ -6,6 +6,9 @@ const cors = require('cors');
 const { Pool } = require('pg');
 const fs = require('fs');
 const path = require('path');
+const csv = require('csv-parser');
+const multer = require('multer');
+const upload = multer({ dest: 'uploads/' });
 
 const app = express();
 const server = http.createServer(app);
@@ -38,6 +41,16 @@ if (!connectionString) {
 }
 
 const pool = new Pool({ connectionString });
+
+// Test database connection
+pool.connect((err, client, release) => {
+  if (err) {
+    console.error('Error connecting to the database:', err);
+  } else {
+    console.log('Successfully connected to the database');
+    release();
+  }
+});
 
 // Initialize database and load seed data if necessary
 async function initializeDatabase() {
@@ -88,7 +101,7 @@ initializeDatabase();
 app.get('/ejercicios', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM ejercicios');
-    console.log('Ejercicios obtenidos:', result.rows);
+    console.log(`Ejercicios obtenidos: ${result.rows.length}`);
     res.json(result.rows);
   } catch (error) {
     console.error('Error al obtener ejercicios:', error);
@@ -155,6 +168,43 @@ app.delete('/ejercicios/:id', async (req, res) => {
     console.error('Error al eliminar ejercicio:', error);
     res.status(500).json({ error: 'Error interno del servidor', detalles: error.message });
   }
+});
+
+// CSV upload route
+app.post('/upload-csv', upload.single('file'), async (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ error: 'No file uploaded' });
+  }
+
+  const results = [];
+  fs.createReadStream(req.file.path)
+    .pipe(csv())
+    .on('data', (data) => results.push(data))
+    .on('end', async () => {
+      try {
+        let addedCount = 0;
+        for (const row of results) {
+          await pool.query(
+            'INSERT INTO ejercicios (pregunta, palabras_clave, respuestas_aceptables, dificultad, categoria, pista) VALUES ($1, $2, $3, $4, $5, $6)',
+            [
+              row.pregunta,
+              row.palabras_clave ? row.palabras_clave.split(',').map(k => k.trim()) : [],
+              row.respuestas_aceptables ? row.respuestas_aceptables.split(',').map(a => a.trim()) : [],
+              row.dificultad,
+              row.categoria,
+              row.pista
+            ]
+          );
+          addedCount++;
+        }
+        fs.unlinkSync(req.file.path); // Delete the temporary file
+        res.status(200).json({ message: `CSV uploaded and processed successfully. ${addedCount} exercises added.` });
+        io.emit('ejercicios_actualizados');
+      } catch (error) {
+        console.error('Error processing CSV:', error);
+        res.status(500).json({ error: 'Error processing CSV', details: error.message });
+      }
+    });
 });
 
 io.on('connection', (socket) => {

@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useCallback, useContext } from 'react';
-import * as XLSX from 'xlsx';
 import { DarkModeContext } from '../App';
 import './AdminPage.css';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000';
 const ADMIN_PASSWORD = 'hoje papa';
+const ITEMS_PER_PAGE = 10;
 
 function AdminPage() {
   const { darkMode } = useContext(DarkModeContext);
@@ -24,6 +24,11 @@ function AdminPage() {
   const [mensajeError, setMensajeError] = useState('');
   const [mensajeExito, setMensajeExito] = useState('');
   const [filtro, setFiltro] = useState('');
+  const [filtroDificultad, setFiltroDificultad] = useState('');
+  const [filtroCategoria, setFiltroCategoria] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+  const [ejercicioToDelete, setEjercicioToDelete] = useState(null);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -155,66 +160,69 @@ function AdminPage() {
     }
   }, [ejercicios]);
 
-  const manejarEliminarEjercicio = async (id) => {
+  const confirmarEliminarEjercicio = (id) => {
+    setEjercicioToDelete(id);
+    setShowDeleteConfirmation(true);
+  };
+
+  const manejarEliminarEjercicio = async () => {
+    if (!ejercicioToDelete) return;
+
     try {
-      const response = await fetch(`${BACKEND_URL}/ejercicios/${id}`, {
+      const response = await fetch(`${BACKEND_URL}/ejercicios/${ejercicioToDelete}`, {
         method: 'DELETE',
       });
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || 'No se pudo eliminar el ejercicio');
       }
-      setEjercicios(ejercicios.filter(ej => ej.id !== id));
+      setEjercicios(ejercicios.filter(ej => ej.id !== ejercicioToDelete));
       setMensajeExito('¡Ejercicio eliminado con éxito!');
       setMensajeError('');
     } catch (error) {
       console.error('Error al eliminar ejercicio:', error);
       setMensajeError(`No se pudo eliminar el ejercicio: ${error.message}`);
+    } finally {
+      setShowDeleteConfirmation(false);
+      setEjercicioToDelete(null);
     }
   };
 
-  const manejarSubirArchivo = (e) => {
+  const manejarSubirArchivo = async (e) => {
     const file = e.target.files[0];
-    const reader = new FileReader();
-    reader.onload = async (evt) => {
-      const bstr = evt.target.result;
-      const wb = XLSX.read(bstr, { type: 'binary' });
-      const wsname = wb.SheetNames[0];
-      const ws = wb.Sheets[wsname];
-      const data = XLSX.utils.sheet_to_json(ws);
-      const formattedData = data.map(item => ({
-        pregunta: item.pregunta,
-        palabrasClave: item.palabrasClave ? item.palabrasClave.split(',').map(k => k.trim()) : [],
-        respuestasAceptables: item.respuestasAceptables ? item.respuestasAceptables.split(',').map(a => a.trim()) : [],
-        dificultad: item.dificultad || 'fácil',
-        categoria: item.categoria || '',
-        pista: item.pista || ''
-      }));
-      
-      let addedCount = 0;
-      let errorCount = 0;
-      for (const ejercicio of formattedData) {
-        try {
-          await agregarEjercicioAPI(ejercicio);
-          addedCount++;
-        } catch (error) {
-          console.error('Error al agregar ejercicio desde archivo:', error);
-          errorCount++;
-        }
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const response = await fetch(`${BACKEND_URL}/upload-csv`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Error al procesar el archivo');
       }
+
+      const result = await response.json();
+      setMensajeExito(result.message);
       obtenerEjercicios();
-      setMensajeExito(`Se agregaron ${addedCount} ejercicios con éxito.`);
-      if (errorCount > 0) {
-        setMensajeError(`No se pudieron agregar ${errorCount} ejercicios. Revise la consola para más detalles.`);
-      }
-    };
-    reader.readAsBinaryString(file);
+    } catch (error) {
+      console.error('Error al subir archivo:', error);
+      setMensajeError(`Error al subir archivo: ${error.message}`);
+    }
   };
 
   const ejerciciosFiltrados = ejercicios.filter(ejercicio =>
-    ejercicio.pregunta.toLowerCase().includes(filtro.toLowerCase()) ||
-    ejercicio.categoria.toLowerCase().includes(filtro.toLowerCase())
+    ejercicio.pregunta.toLowerCase().includes(filtro.toLowerCase()) &&
+    (filtroDificultad === '' || ejercicio.dificultad === filtroDificultad) &&
+    (filtroCategoria === '' || ejercicio.categoria.toLowerCase().includes(filtroCategoria.toLowerCase()))
   );
+
+  const totalPages = Math.ceil(ejerciciosFiltrados.length / ITEMS_PER_PAGE);
+  const paginatedEjercicios = ejerciciosFiltrados.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
   if (!isAuthenticated) {
     return (
@@ -300,22 +308,38 @@ function AdminPage() {
       </div>
 
       <div className="admin-section">
-        <h3>Subir Archivo Excel</h3>
-        <input type="file" accept=".xlsx, .xls" onChange={manejarSubirArchivo} />
+        <h3>Subir Archivo</h3>
+        <p>Puede subir archivos CSV. Asegúrese de que el archivo tenga las siguientes columnas: pregunta, palabrasClave, respuestasAceptables, dificultad, categoria, pista</p>
+        <input type="file" accept=".csv" onChange={manejarSubirArchivo} />
       </div>
 
       <div className="admin-section">
         <h3>Ejercicios Actuales</h3>
-        <div className="search-container">
+        <div className="filters">
           <input
             type="text"
             placeholder="Buscar ejercicios..."
             value={filtro}
             onChange={(e) => setFiltro(e.target.value)}
           />
+          <select
+            value={filtroDificultad}
+            onChange={(e) => setFiltroDificultad(e.target.value)}
+          >
+            <option value="">Todas las dificultades</option>
+            <option value="fácil">Fácil</option>
+            <option value="medio">Medio</option>
+            <option value="difícil">Difícil</option>
+          </select>
+          <input
+            type="text"
+            placeholder="Filtrar por categoría..."
+            value={filtroCategoria}
+            onChange={(e) => setFiltroCategoria(e.target.value)}
+          />
         </div>
         <ul className="ejercicios-lista">
-          {ejerciciosFiltrados.map((ejercicio) => (
+          {paginatedEjercicios.map((ejercicio) => (
             <li key={ejercicio.id} className="ejercicio-item">
               {ejercicioEditando && ejercicioEditando.id === ejercicio.id ? (
                 <div className="ejercicio-edit">
@@ -367,14 +391,30 @@ function AdminPage() {
                   <p><strong>Pista:</strong> {ejercicio.pista}</p>
                   <div className="button-group">
                     <button onClick={() => manejarEditarEjercicio(ejercicio)} className="btn-secondary">Editar</button>
-                    <button onClick={() => manejarEliminarEjercicio(ejercicio.id)} className="btn-danger">Eliminar</button>
+                    <button onClick={() => confirmarEliminarEjercicio(ejercicio.id)} className="btn-danger">Eliminar</button>
                   </div>
                 </div>
               )}
             </li>
           ))}
         </ul>
+        <div className="pagination">
+          <button onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1}>
+            Anterior
+          </button>
+          <span>{currentPage} de {totalPages}</span>
+          <button onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages}>
+            Siguiente
+          </button>
+        </div>
       </div>
+      {showDeleteConfirmation && (
+        <div className="delete-confirmation">
+          <p>¿Está seguro de que desea eliminar este ejercicio?</p>
+          <button onClick={manejarEliminarEjercicio} className="btn-danger">Sí, eliminar</button>
+          <button onClick={() => setShowDeleteConfirmation(false)} className="btn-secondary">Cancelar</button>
+        </div>
+      )}
     </div>
   );
 }

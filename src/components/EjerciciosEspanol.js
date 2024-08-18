@@ -56,7 +56,12 @@ function EjerciciosEspanol() {
       ? ejercicioActual.respuestas_aceptables 
       : [ejercicioActual.respuestas_aceptables];
 
-    if (respuestasAceptables.some(respuesta => respuestaUsuario.toLowerCase().trim() === respuesta.toLowerCase().trim())) {
+    const respuestaUsuarioNormalizada = respuestaUsuario.toLowerCase().trim().replace(/\s+/g, ' ');
+    const respuestasAceptablesNormalizadas = respuestasAceptables.map(respuesta => 
+      respuesta.toLowerCase().trim().replace(/\s+/g, ' ')
+    );
+
+    if (respuestasAceptablesNormalizadas.includes(respuestaUsuarioNormalizada)) {
       setRetroalimentacion('¡Correcto!');
       setEstadisticas(prev => ({ ...prev, correctas: prev.correctas + 1 }));
     } else {
