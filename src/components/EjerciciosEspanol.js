@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { CSSTransition } from 'react-transition-group';
 import { DarkModeContext } from '../App';
 import useExerciseManagement from '../hooks/useExerciseManagement';
+import { Player } from '@lottiefiles/react-lottie-player';
 import './EjerciciosEspanol.css';
 
 function EjerciciosEspanol() {
@@ -89,14 +90,14 @@ function EjerciciosEspanol() {
   if (!ejercicioActual) {
     return (
       <div className="loading">
-        <dotlottie-player
+        <Player
           src="https://lottie.host/4cdef2e6-3fad-49aa-abea-2abe18a10962/FUGGRSDYDh.json"
           background="transparent"
-          speed="1"
+          speed={1}
           style={{ width: '300px', height: '300px' }}
           loop
           autoplay
-        ></dotlottie-player>
+        />
         <p>Cargando ejercicios...</p>
       </div>
     );
@@ -107,13 +108,13 @@ function EjerciciosEspanol() {
       <div className="module-complete">
         <h2>¡Felicidades!</h2>
         <p>Has completado todos los ejercicios en este módulo.</p>
-        <dotlottie-player
+        <Player
           src="https://lottie.host/dfea151d-82eb-48c5-b01c-6f59ec4c9488/BhCdCrapss.json"
           background="transparent"
-          speed="1"
+          speed={1}
           style={{ width: '400px', height: '400px' }}
           autoplay
-        ></dotlottie-player>
+        />
         <div className="module-complete-actions">
           <button onClick={() => navigate('/')} className="btn btn-primary">Volver al inicio</button>
           <button onClick={reiniciarQuiz} className="btn btn-secondary">Reiniciar módulo</button>
@@ -180,13 +181,13 @@ function EjerciciosEspanol() {
       </div>
       {showCorrectAnimation && (
         <div className="correct-animation">
-          <dotlottie-player
+          <Player
             src="https://lottie.host/a6cffb61-fa41-46e8-bb29-5fa9e33b16fe/PQXLfM8tRt.json"
             background="transparent"
-            speed="1"
+            speed={1}
             style={{ width: '300px', height: '300px' }}
             autoplay
-          ></dotlottie-player>
+          />
         </div>
       )}
     </div>

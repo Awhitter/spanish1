@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Player } from '@lottiefiles/react-lottie-player';
 import './AdminPage.css';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000';
@@ -18,11 +19,15 @@ function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
   const [showEditModal, setShowEditModal] = useState(false);
+  const [darkMode, setDarkMode] = useState(false);
 
   useEffect(() => {
     if (isAuthenticated) {
       fetchEjercicios();
     }
+    const savedDarkMode = localStorage.getItem('darkMode') === 'true';
+    setDarkMode(savedDarkMode);
+    document.body.classList.toggle('dark-mode', savedDarkMode);
   }, [isAuthenticated]);
 
   const fetchEjercicios = async () => {
@@ -33,9 +38,11 @@ function AdminPage() {
         setEjercicios(data);
       } else {
         console.error('Error fetching ejercicios');
+        setMessage('Error al cargar los ejercicios. Por favor, intente de nuevo.');
       }
     } catch (error) {
       console.error('Error:', error);
+      setMessage('Error de conexión. Por favor, verifique su conexión a internet e intente de nuevo.');
     }
   };
 
@@ -70,29 +77,33 @@ function AdminPage() {
         fetchEjercicios();
         setShowEditModal(false);
       } else {
-        setMessage('Error al procesar el ejercicio');
+        const errorData = await response.json();
+        setMessage(`Error al procesar el ejercicio: ${errorData.message || 'Intente de nuevo'}`);
       }
     } catch (error) {
       console.error('Error:', error);
-      setMessage('Error al procesar el ejercicio');
+      setMessage('Error al procesar el ejercicio. Por favor, verifique su conexión e intente de nuevo.');
     }
   };
 
   const handleDelete = async (id) => {
-    try {
-      const response = await fetch(`${BACKEND_URL}/ejercicios/${id}`, {
-        method: 'DELETE',
-      });
+    if (window.confirm('¿Está seguro de que desea eliminar este ejercicio?')) {
+      try {
+        const response = await fetch(`${BACKEND_URL}/ejercicios/${id}`, {
+          method: 'DELETE',
+        });
 
-      if (response.ok) {
-        setMessage('Ejercicio eliminado con éxito');
-        fetchEjercicios();
-      } else {
-        setMessage('Error al eliminar el ejercicio');
+        if (response.ok) {
+          setMessage('Ejercicio eliminado con éxito');
+          fetchEjercicios();
+        } else {
+          const errorData = await response.json();
+          setMessage(`Error al eliminar el ejercicio: ${errorData.message || 'Intente de nuevo'}`);
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        setMessage('Error al eliminar el ejercicio. Por favor, verifique su conexión e intente de nuevo.');
       }
-    } catch (error) {
-      console.error('Error:', error);
-      setMessage('Error al eliminar el ejercicio');
     }
   };
 
@@ -145,11 +156,12 @@ function AdminPage() {
         setMessage(`CSV procesado. ${result.addedCount} ejercicios agregados, ${result.errorCount} ejercicios inválidos.`);
         fetchEjercicios();
       } else {
-        setMessage('Error al procesar el archivo CSV');
+        const errorData = await response.json();
+        setMessage(`Error al procesar el archivo CSV: ${errorData.message || 'Intente de nuevo'}`);
       }
     } catch (error) {
       console.error('Error:', error);
-      setMessage('Error al procesar el archivo CSV');
+      setMessage('Error al procesar el archivo CSV. Por favor, verifique su conexión e intente de nuevo.');
     }
   };
 
@@ -157,23 +169,31 @@ function AdminPage() {
     e.preventDefault();
     if (password === 'hoje papa') {
       setIsAuthenticated(true);
+      setMessage('');
     } else {
       setMessage('Contraseña incorrecta');
     }
+  };
+
+  const toggleDarkMode = () => {
+    const newDarkMode = !darkMode;
+    setDarkMode(newDarkMode);
+    document.body.classList.toggle('dark-mode', newDarkMode);
+    localStorage.setItem('darkMode', newDarkMode);
   };
 
   if (!isAuthenticated) {
     return (
       <div className="admin-login">
         <h2>Iniciar sesión de administrador</h2>
-        <dotlottie-player
+        <Player
           src="https://lottie.host/89ac2690-0d2f-4655-90ad-3f7434371de8/wfBnzQud2H.json"
           background="transparent"
-          speed="1"
+          speed={1}
           style={{ width: '200px', height: '200px' }}
           loop
           autoplay
-        ></dotlottie-player>
+        />
         <form onSubmit={handleLogin}>
           <input
             type="password"
@@ -191,6 +211,9 @@ function AdminPage() {
 
   return (
     <div className="admin-page">
+      <button className="dark-mode-toggle" onClick={toggleDarkMode}>
+        {darkMode ? '☀️' : '🌙'}
+      </button>
       <h2>Administración de Ejercicios</h2>
       
       <div className="admin-instructions">
@@ -198,8 +221,9 @@ function AdminPage() {
         <ol>
           <li>Para agregar un nuevo ejercicio, haga clic en "Agregar Ejercicio" y complete el formulario.</li>
           <li>Para editar un ejercicio existente, haga clic en "Editar" junto al ejercicio que desea modificar.</li>
-          <li>Para eliminar un ejercicio, haga clic en "Eliminar" junto al ejercicio que desea quitar.</li>
+          <li>Para eliminar un ejercicio, haga clic en "Eliminar" junto al ejercicio que desea quitar. Se le pedirá confirmación.</li>
           <li>Para cargar múltiples ejercicios a la vez, use la función de carga CSV. Asegúrese de que su archivo CSV tenga las siguientes columnas: pregunta, palabras_clave, respuestas_aceptables, dificultad, categoria, pista, modulo.</li>
+          <li>Utilice el modo oscuro para una mejor visibilidad en entornos con poca luz.</li>
         </ol>
       </div>
 
