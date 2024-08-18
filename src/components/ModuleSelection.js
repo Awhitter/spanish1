@@ -36,7 +36,19 @@ function ModuleSelection() {
   }, []);
 
   if (loading) {
-    return <div className="loading">Cargando módulos...</div>;
+    return (
+      <div className="loading">
+        <dotlottie-player
+          src="https://lottie.host/4cdef2e6-3fad-49aa-abea-2abe18a10962/FUGGRSDYDh.json"
+          background="transparent"
+          speed="1"
+          style={{ width: '300px', height: '300px' }}
+          loop
+          autoplay
+        ></dotlottie-player>
+        <p>Cargando módulos...</p>
+      </div>
+    );
   }
 
   if (error) {
@@ -56,7 +68,7 @@ function ModuleSelection() {
           <Link key={index} to={`/module/${encodeURIComponent(module.name)}`} className="module-button">
             <h3>{module.name}</h3>
             <p>Ejercicios: {module.count}</p>
-            <p>Última actualización: {new Date(module.lastUpdated).toLocaleString()}</p>
+            <p>Última actualización: {new Date(module.lastupdated).toLocaleString('es-ES', { timeZone: 'UTC' })}</p>
           </Link>
         ))}
       </div>

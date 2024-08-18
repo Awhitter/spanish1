@@ -17,6 +17,7 @@ function AdminPage() {
   const [message, setMessage] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
+  const [showEditModal, setShowEditModal] = useState(false);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -67,6 +68,7 @@ function AdminPage() {
         setMessage(editingId ? 'Ejercicio actualizado con éxito' : 'Ejercicio agregado con éxito');
         clearForm();
         fetchEjercicios();
+        setShowEditModal(false);
       } else {
         setMessage('Error al procesar el ejercicio');
       }
@@ -103,6 +105,7 @@ function AdminPage() {
     setCategoria(ejercicio.categoria);
     setPista(ejercicio.pista);
     setModulo(ejercicio.modulo);
+    setShowEditModal(true);
   };
 
   const clearForm = () => {
@@ -114,6 +117,7 @@ function AdminPage() {
     setCategoria('');
     setPista('');
     setModulo('');
+    setShowEditModal(false);
   };
 
   const handleFileChange = (e) => {
@@ -192,8 +196,8 @@ function AdminPage() {
       <div className="admin-instructions">
         <h3>Instrucciones para administradores:</h3>
         <ol>
-          <li>Para agregar un nuevo ejercicio, complete el formulario y haga clic en "Agregar Ejercicio".</li>
-          <li>Para editar un ejercicio existente, haga clic en "Editar" junto al ejercicio, realice los cambios y haga clic en "Actualizar Ejercicio".</li>
+          <li>Para agregar un nuevo ejercicio, haga clic en "Agregar Ejercicio" y complete el formulario.</li>
+          <li>Para editar un ejercicio existente, haga clic en "Editar" junto al ejercicio que desea modificar.</li>
           <li>Para eliminar un ejercicio, haga clic en "Eliminar" junto al ejercicio que desea quitar.</li>
           <li>Para cargar múltiples ejercicios a la vez, use la función de carga CSV. Asegúrese de que su archivo CSV tenga las siguientes columnas: pregunta, palabras_clave, respuestas_aceptables, dificultad, categoria, pista, modulo.</li>
         </ol>
@@ -201,95 +205,7 @@ function AdminPage() {
 
       {message && <p className="message">{message}</p>}
       <div className="admin-content">
-        <form onSubmit={handleSubmit} className="exercise-form">
-          <div className="form-group">
-            <label htmlFor="pregunta">Pregunta:</label>
-            <textarea
-              id="pregunta"
-              value={pregunta}
-              onChange={(e) => setPregunta(e.target.value)}
-              placeholder="Pregunta"
-              required
-              rows="4"
-            />
-          </div>
-          <div className="form-row">
-            <div className="form-group">
-              <label htmlFor="palabrasClave">Palabras clave:</label>
-              <input
-                id="palabrasClave"
-                type="text"
-                value={palabrasClave}
-                onChange={(e) => setPalabrasClave(e.target.value)}
-                placeholder="Separadas por comas"
-              />
-            </div>
-            <div className="form-group">
-              <label htmlFor="respuestasAceptables">Respuestas aceptables:</label>
-              <input
-                id="respuestasAceptables"
-                type="text"
-                value={respuestasAceptables}
-                onChange={(e) => setRespuestasAceptables(e.target.value)}
-                placeholder="Separadas por comas"
-                required
-              />
-            </div>
-          </div>
-          <div className="form-row">
-            <div className="form-group">
-              <label htmlFor="dificultad">Dificultad:</label>
-              <select
-                id="dificultad"
-                value={dificultad}
-                onChange={(e) => setDificultad(e.target.value)}
-                required
-              >
-                <option value="">Selecciona la dificultad</option>
-                <option value="fácil">Fácil</option>
-                <option value="medio">Medio</option>
-                <option value="difícil">Difícil</option>
-              </select>
-            </div>
-            <div className="form-group">
-              <label htmlFor="categoria">Categoría:</label>
-              <input
-                id="categoria"
-                type="text"
-                value={categoria}
-                onChange={(e) => setCategoria(e.target.value)}
-                placeholder="Categoría"
-              />
-            </div>
-          </div>
-          <div className="form-row">
-            <div className="form-group">
-              <label htmlFor="pista">Pista:</label>
-              <input
-                id="pista"
-                type="text"
-                value={pista}
-                onChange={(e) => setPista(e.target.value)}
-                placeholder="Pista"
-              />
-            </div>
-            <div className="form-group">
-              <label htmlFor="modulo">Módulo:</label>
-              <input
-                id="modulo"
-                type="text"
-                value={modulo}
-                onChange={(e) => setModulo(e.target.value)}
-                placeholder="Módulo"
-                required
-              />
-            </div>
-          </div>
-          <button type="submit" className="btn btn-primary">{editingId ? 'Actualizar' : 'Agregar'} Ejercicio</button>
-          {editingId && (
-            <button type="button" onClick={clearForm} className="btn btn-secondary">Cancelar Edición</button>
-          )}
-        </form>
+        <button onClick={() => setShowEditModal(true)} className="btn btn-primary">Agregar Ejercicio</button>
 
         <div className="csv-upload">
           <h3>Subir archivo CSV</h3>
@@ -311,7 +227,7 @@ function AdminPage() {
             <p><strong>Dificultad:</strong> {ejercicio.dificultad}</p>
             <p><strong>Categoría:</strong> {ejercicio.categoria}</p>
             <p><strong>Pista:</strong> {ejercicio.pista}</p>
-            <p><strong>Última actualización:</strong> {new Date(ejercicio.updated_at).toLocaleString()}</p>
+            <p><strong>Última actualización:</strong> {new Date(ejercicio.updated_at).toLocaleString('es-ES', { timeZone: 'UTC' })}</p>
             <div className="exercise-actions">
               <button onClick={() => handleEdit(ejercicio)} className="btn btn-secondary">Editar</button>
               <button onClick={() => handleDelete(ejercicio.id)} className="btn btn-danger">Eliminar</button>
@@ -319,6 +235,103 @@ function AdminPage() {
           </div>
         ))}
       </div>
+
+      {showEditModal && (
+        <div className="modal">
+          <div className="modal-content">
+            <h3>{editingId ? 'Editar Ejercicio' : 'Agregar Ejercicio'}</h3>
+            <form onSubmit={handleSubmit} className="exercise-form">
+              <div className="form-group">
+                <label htmlFor="pregunta">Pregunta:</label>
+                <textarea
+                  id="pregunta"
+                  value={pregunta}
+                  onChange={(e) => setPregunta(e.target.value)}
+                  placeholder="Pregunta"
+                  required
+                  rows="4"
+                />
+              </div>
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="palabrasClave">Palabras clave:</label>
+                  <input
+                    id="palabrasClave"
+                    type="text"
+                    value={palabrasClave}
+                    onChange={(e) => setPalabrasClave(e.target.value)}
+                    placeholder="Separadas por comas"
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="respuestasAceptables">Respuestas aceptables:</label>
+                  <input
+                    id="respuestasAceptables"
+                    type="text"
+                    value={respuestasAceptables}
+                    onChange={(e) => setRespuestasAceptables(e.target.value)}
+                    placeholder="Separadas por comas"
+                    required
+                  />
+                </div>
+              </div>
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="dificultad">Dificultad:</label>
+                  <select
+                    id="dificultad"
+                    value={dificultad}
+                    onChange={(e) => setDificultad(e.target.value)}
+                    required
+                  >
+                    <option value="">Selecciona la dificultad</option>
+                    <option value="fácil">Fácil</option>
+                    <option value="medio">Medio</option>
+                    <option value="difícil">Difícil</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label htmlFor="categoria">Categoría:</label>
+                  <input
+                    id="categoria"
+                    type="text"
+                    value={categoria}
+                    onChange={(e) => setCategoria(e.target.value)}
+                    placeholder="Categoría"
+                  />
+                </div>
+              </div>
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="pista">Pista:</label>
+                  <input
+                    id="pista"
+                    type="text"
+                    value={pista}
+                    onChange={(e) => setPista(e.target.value)}
+                    placeholder="Pista"
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="modulo">Módulo:</label>
+                  <input
+                    id="modulo"
+                    type="text"
+                    value={modulo}
+                    onChange={(e) => setModulo(e.target.value)}
+                    placeholder="Módulo"
+                    required
+                  />
+                </div>
+              </div>
+              <div className="modal-actions">
+                <button type="submit" className="btn btn-primary">{editingId ? 'Actualizar' : 'Agregar'} Ejercicio</button>
+                <button type="button" onClick={clearForm} className="btn btn-secondary">Cancelar</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
