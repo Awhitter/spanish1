@@ -152,14 +152,16 @@ function AdminPage() {
     return (
       <div className="admin-login">
         <h2>Iniciar sesión de administrador</h2>
-        <Player
-          src="https://lottie.host/89ac2690-0d2f-4655-90ad-3f7434371de8/wfBnzQud2H.json"
-          background="transparent"
-          speed={1}
-          style={{ width: '200px', height: '200px' }}
-          loop
-          autoplay
-        />
+        <div className="lottie-container">
+          <Player
+            src="https://lottie.host/89ac2690-0d2f-4655-90ad-3f7434371de8/wfBnzQud2H.json"
+            background="transparent"
+            speed={1}
+            style={{ width: '200px', height: '200px' }}
+            loop
+            autoplay
+          />
+        </div>
         <form onSubmit={handleLogin}>
           <input
             type="password"
@@ -282,10 +284,12 @@ function AdminPage() {
 
   return (
     <div className="admin-page">
-      <button className="dark-mode-toggle" onClick={toggleDarkMode}>
-        {darkMode ? '☀️' : '🌙'}
-      </button>
-      <h2>Administración de Ejercicios</h2>
+      <div className="admin-header">
+        <h2>Administración de Ejercicios</h2>
+        <button className="dark-mode-toggle" onClick={toggleDarkMode}>
+          {darkMode ? '☀️' : '🌙'}
+        </button>
+      </div>
       
       <div className="admin-instructions">
         <h3>Instrucciones para administradores:</h3>
