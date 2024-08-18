@@ -25,11 +25,13 @@ function App() {
       <Router>
         <div className={`App ${darkMode ? 'dark-mode' : ''}`}>
           <header className="App-header">
-            <h1 className="fancy-title">Ejercicios de Español de Alejandra</h1>
-            <nav className="nav-menu">
-              <Link to="/" className="nav-link">Inicio</Link>
-              <Link to="/admin" className="nav-link">Admin</Link>
-            </nav>
+            <div className="header-content">
+              <h1 className="fancy-title">Ejercicios de Español de Alejandra</h1>
+              <nav className="nav-menu">
+                <Link to="/" className="nav-link">Inicio</Link>
+                <Link to="/admin" className="nav-link">Admin</Link>
+              </nav>
+            </div>
             <button onClick={toggleDarkMode} className="toggle-dark-mode" aria-label="Cambiar modo oscuro">
               {darkMode ? '☀️' : '🌙'}
             </button>

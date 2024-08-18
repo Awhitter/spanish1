@@ -30,6 +30,7 @@ function EjerciciosEspanol() {
 
   const [animacionSalida, setAnimacionSalida] = useState(false);
   const [moduleComplete, setModuleComplete] = useState(false);
+  const [showCorrectAnimation, setShowCorrectAnimation] = useState(false);
 
   useEffect(() => {
     obtenerEjerciciosPorModulo(moduleId);
@@ -49,7 +50,11 @@ function EjerciciosEspanol() {
   const manejarEnvio = useCallback((e) => {
     e.preventDefault();
     verificarRespuesta();
-  }, [verificarRespuesta]);
+    if (retroalimentacion.startsWith('¡Correcto!')) {
+      setShowCorrectAnimation(true);
+      setTimeout(() => setShowCorrectAnimation(false), 2000);
+    }
+  }, [verificarRespuesta, retroalimentacion]);
 
   const manejarSiguienteEjercicio = useCallback(() => {
     setAnimacionSalida(true);
@@ -171,6 +176,16 @@ function EjerciciosEspanol() {
         <p>Incorrectas: {estadisticas.incorrectas}</p>
         <p>Saltadas: {estadisticas.saltadas}</p>
       </div>
+      {showCorrectAnimation && (
+        <div className="correct-animation">
+          <Player
+            autoplay
+            loop={false}
+            src="https://lottie.host/a6cffb61-fa41-46e8-bb29-5fa9e33b16fe/PQXLfM8tRt.json"
+            style={{ height: '200px', width: '200px' }}
+          />
+        </div>
+      )}
     </div>
   );
 }

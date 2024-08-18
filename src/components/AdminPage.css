@@ -9,9 +9,21 @@
   margin-bottom: 20px;
 }
 
-.message {
+.admin-instructions {
   background-color: #f0f0f0;
-  border: 1px solid #ccc;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.admin-instructions h3 {
+  margin-top: 0;
+}
+
+.message {
+  background-color: #e0f7fa;
+  border: 1px solid #b2ebf2;
   border-radius: 4px;
   padding: 10px;
   margin-bottom: 20px;
@@ -26,12 +38,30 @@
   margin-bottom: 20px;
 }
 
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+.form-row {
+  display: flex;
+  gap: 15px;
+}
+
+.form-row .form-group {
+  flex: 1;
+}
+
 .exercise-form textarea,
 .exercise-form input,
 .exercise-form select {
   width: 100%;
   padding: 10px;
-  margin-bottom: 10px;
   border: 1px solid #ccc;
   border-radius: 4px;
   font-size: 16px;
@@ -44,10 +74,10 @@
 
 .btn {
   padding: 10px 20px;
+  font-size: 16px;
   border: none;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 16px;
   transition: background-color 0.3s ease;
 }
 
@@ -135,90 +165,45 @@
   margin-right: 10px;
 }
 
-.modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.modal-content {
-  background-color: #fff;
+.admin-login {
+  max-width: 400px;
+  margin: 100px auto;
+  text-align: center;
   padding: 20px;
+  background-color: #f9f9f9;
   border-radius: 8px;
-  width: 80%;
-  max-width: 600px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
+.admin-login h2 {
+  margin-bottom: 20px;
+}
+
+.admin-login input {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.admin-login button {
+  width: 100%;
+  padding: 10px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.admin-login .hint {
   margin-top: 20px;
+  font-style: italic;
+  color: #666;
 }
 
-.modal-actions button {
-  margin-left: 10px;
-}
-
-/* Dark mode styles */
-.dark-mode .admin-page {
-  background-color: #333;
-  color: #fff;
-}
-
-.dark-mode .message {
-  background-color: #444;
-  border-color: #555;
-}
-
-.dark-mode .exercise-form,
-.dark-mode .csv-upload,
-.dark-mode .exercise-list,
-.dark-mode .exercise-item,
-.dark-mode .modal-content {
-  background-color: #444;
-  border-color: #555;
-}
-
-.dark-mode .exercise-form textarea,
-.dark-mode .exercise-form input,
-.dark-mode .exercise-form select {
-  background-color: #555;
-  border-color: #666;
-  color: #fff;
-}
-
-.dark-mode .btn-primary {
-  background-color: #45a049;
-}
-
-.dark-mode .btn-secondary {
-  background-color: #0077be;
-}
-
-.dark-mode .btn-danger {
-  background-color: #d32f2f;
-}
-
-/* Animations */
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-.modal {
-  animation: fadeIn 0.3s ease-in-out;
-}
-
-.exercise-item {
-  transition: transform 0.3s ease-in-out;
-}
-
-.exercise-item:hover {
-  transform: translateY(-5px);
+.admin-login .error-message {
+  color: #f44336;
+  margin-top: 10px;
 }

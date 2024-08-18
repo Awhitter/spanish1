@@ -2,6 +2,7 @@
   max-width: 800px;
   margin: 0 auto;
   padding: 20px;
+  position: relative;
 }
 
 .ejercicios-espanol h2 {
@@ -159,6 +160,14 @@ input[type="text"] {
   align-items: center;
   justify-content: center;
   height: 100vh;
+}
+
+.correct-animation {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1000;
 }
 
 /* Dark mode styles */

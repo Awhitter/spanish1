@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Player } from '@lottiefiles/react-lottie-player';
 import './AdminPage.css';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000';
@@ -15,10 +16,14 @@ function AdminPage() {
   const [editingId, setEditingId] = useState(null);
   const [file, setFile] = useState(null);
   const [message, setMessage] = useState('');
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [password, setPassword] = useState('');
 
   useEffect(() => {
-    fetchEjercicios();
-  }, []);
+    if (isAuthenticated) {
+      fetchEjercicios();
+    }
+  }, [isAuthenticated]);
 
   const fetchEjercicios = async () => {
     try {
@@ -145,6 +150,40 @@ function AdminPage() {
     }
   };
 
+  const handleLogin = (e) => {
+    e.preventDefault();
+    if (password === 'hoje papa') {
+      setIsAuthenticated(true);
+    } else {
+      setMessage('Contraseña incorrecta');
+    }
+  };
+
+  if (!isAuthenticated) {
+    return (
+      <div className="admin-login">
+        <h2>Iniciar sesión de administrador</h2>
+        <Player
+          autoplay
+          loop
+          src="https://lottie.host/89ac2690-0d2f-4655-90ad-3f7434371de8/wfBnzQud2H.json"
+          style={{ height: '200px', width: '200px' }}
+        />
+        <form onSubmit={handleLogin}>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Contraseña"
+          />
+          <button type="submit">Iniciar sesión</button>
+        </form>
+        <p className="hint">Pista: everyone calls alec the "h___ (space) p____"</p>
+        {message && <p className="error-message">{message}</p>}
+      </div>
+    );
+  }
+
   return (
     <div className="admin-page">
       <h2>Administración de Ejercicios</h2>
@@ -161,55 +200,89 @@ function AdminPage() {
 
       {message && <p className="message">{message}</p>}
       <form onSubmit={handleSubmit} className="exercise-form">
-        <textarea
-          value={pregunta}
-          onChange={(e) => setPregunta(e.target.value)}
-          placeholder="Pregunta"
-          required
-          rows="3"
-        />
-        <input
-          type="text"
-          value={palabrasClave}
-          onChange={(e) => setPalabrasClave(e.target.value)}
-          placeholder="Palabras clave (separadas por comas)"
-        />
-        <input
-          type="text"
-          value={respuestasAceptables}
-          onChange={(e) => setRespuestasAceptables(e.target.value)}
-          placeholder="Respuestas aceptables (separadas por comas)"
-          required
-        />
-        <select
-          value={dificultad}
-          onChange={(e) => setDificultad(e.target.value)}
-          required
-        >
-          <option value="">Selecciona la dificultad</option>
-          <option value="fácil">Fácil</option>
-          <option value="medio">Medio</option>
-          <option value="difícil">Difícil</option>
-        </select>
-        <input
-          type="text"
-          value={categoria}
-          onChange={(e) => setCategoria(e.target.value)}
-          placeholder="Categoría"
-        />
-        <input
-          type="text"
-          value={pista}
-          onChange={(e) => setPista(e.target.value)}
-          placeholder="Pista"
-        />
-        <input
-          type="text"
-          value={modulo}
-          onChange={(e) => setModulo(e.target.value)}
-          placeholder="Módulo"
-          required
-        />
+        <div className="form-group">
+          <label htmlFor="pregunta">Pregunta:</label>
+          <textarea
+            id="pregunta"
+            value={pregunta}
+            onChange={(e) => setPregunta(e.target.value)}
+            placeholder="Pregunta"
+            required
+            rows="4"
+          />
+        </div>
+        <div className="form-row">
+          <div className="form-group">
+            <label htmlFor="palabrasClave">Palabras clave:</label>
+            <input
+              id="palabrasClave"
+              type="text"
+              value={palabrasClave}
+              onChange={(e) => setPalabrasClave(e.target.value)}
+              placeholder="Separadas por comas"
+            />
+          </div>
+          <div className="form-group">
+            <label htmlFor="respuestasAceptables">Respuestas aceptables:</label>
+            <input
+              id="respuestasAceptables"
+              type="text"
+              value={respuestasAceptables}
+              onChange={(e) => setRespuestasAceptables(e.target.value)}
+              placeholder="Separadas por comas"
+              required
+            />
+          </div>
+        </div>
+        <div className="form-row">
+          <div className="form-group">
+            <label htmlFor="dificultad">Dificultad:</label>
+            <select
+              id="dificultad"
+              value={dificultad}
+              onChange={(e) => setDificultad(e.target.value)}
+              required
+            >
+              <option value="">Selecciona la dificultad</option>
+              <option value="fácil">Fácil</option>
+              <option value="medio">Medio</option>
+              <option value="difícil">Difícil</option>
+            </select>
+          </div>
+          <div className="form-group">
+            <label htmlFor="categoria">Categoría:</label>
+            <input
+              id="categoria"
+              type="text"
+              value={categoria}
+              onChange={(e) => setCategoria(e.target.value)}
+              placeholder="Categoría"
+            />
+          </div>
+        </div>
+        <div className="form-row">
+          <div className="form-group">
+            <label htmlFor="pista">Pista:</label>
+            <input
+              id="pista"
+              type="text"
+              value={pista}
+              onChange={(e) => setPista(e.target.value)}
+              placeholder="Pista"
+            />
+          </div>
+          <div className="form-group">
+            <label htmlFor="modulo">Módulo:</label>
+            <input
+              id="modulo"
+              type="text"
+              value={modulo}
+              onChange={(e) => setModulo(e.target.value)}
+              placeholder="Módulo"
+              required
+            />
+          </div>
+        </div>
         <button type="submit" className="btn btn-primary">{editingId ? 'Actualizar' : 'Agregar'} Ejercicio</button>
         {editingId && (
           <button type="button" onClick={clearForm} className="btn btn-secondary">Cancelar Edición</button>
