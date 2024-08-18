@@ -1,11 +1,13 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useContext } from 'react';
 import * as XLSX from 'xlsx';
+import { DarkModeContext } from '../App';
 import './AdminPage.css';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000';
 const ADMIN_PASSWORD = 'hoje papa';
 
 function AdminPage() {
+  const { darkMode } = useContext(DarkModeContext);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
   const [showHint, setShowHint] = useState(false);
@@ -134,6 +136,7 @@ function AdminPage() {
       setEjercicios(ejercicios.map(ej => ej.id === ejercicioActualizadoResponse.id ? ejercicioActualizadoResponse : ej));
       setMensajeExito('¡Ejercicio actualizado con éxito!');
       setMensajeError('');
+      setEjercicioEditando(null);
     } catch (error) {
       console.error('Error al actualizar ejercicio:', error);
       setMensajeError(`No se pudo actualizar el ejercicio: ${error.message}`);
@@ -203,7 +206,7 @@ function AdminPage() {
 
   if (!isAuthenticated) {
     return (
-      <div className="admin-login">
+      <div className={`admin-login ${darkMode ? 'dark-mode' : ''}`}>
         <h2>Iniciar sesión como administrador</h2>
         {mensajeError && <div className="error-message">{mensajeError}</div>}
         <form onSubmit={handleLogin}>
@@ -223,131 +226,137 @@ function AdminPage() {
   }
 
   return (
-    <div className="admin-page">
+    <div className={`admin-page ${darkMode ? 'dark-mode' : ''}`}>
       <h2>Página de Administración</h2>
       <button onClick={handleLogout} className="logout-button">Cerrar sesión</button>
       {mensajeError && <div className="error-message">{mensajeError}</div>}
       {mensajeExito && <div className="success-message">{mensajeExito}</div>}
-      <h3>Agregar Nuevo Ejercicio</h3>
-      <div className="form-group">
-        <label>Pregunta:</label>
-        <input
-          type="text"
-          value={nuevoEjercicio.pregunta}
-          onChange={(e) => manejarCambioInput(e, 'pregunta')}
-        />
+      <div className="admin-section">
+        <h3>Agregar Nuevo Ejercicio</h3>
+        <div className="form-group">
+          <label>Pregunta:</label>
+          <input
+            type="text"
+            value={nuevoEjercicio.pregunta}
+            onChange={(e) => manejarCambioInput(e, 'pregunta')}
+          />
+        </div>
+        <div className="form-group">
+          <label>Palabras Clave (separadas por comas):</label>
+          <input
+            type="text"
+            value={nuevoEjercicio.palabrasClave.join(', ')}
+            onChange={(e) => manejarCambioInput(e, 'palabrasClave')}
+          />
+        </div>
+        <div className="form-group">
+          <label>Respuestas Aceptables (separadas por comas):</label>
+          <input
+            type="text"
+            value={nuevoEjercicio.respuestasAceptables.join(', ')}
+            onChange={(e) => manejarCambioInput(e, 'respuestasAceptables')}
+          />
+        </div>
+        <div className="form-group">
+          <label>Dificultad:</label>
+          <select
+            value={nuevoEjercicio.dificultad}
+            onChange={(e) => manejarCambioInput(e, 'dificultad')}
+          >
+            <option value="fácil">Fácil</option>
+            <option value="medio">Medio</option>
+            <option value="difícil">Difícil</option>
+          </select>
+        </div>
+        <div className="form-group">
+          <label>Categoría:</label>
+          <input
+            type="text"
+            value={nuevoEjercicio.categoria}
+            onChange={(e) => manejarCambioInput(e, 'categoria')}
+          />
+        </div>
+        <div className="form-group">
+          <label>Pista:</label>
+          <input
+            type="text"
+            value={nuevoEjercicio.pista}
+            onChange={(e) => manejarCambioInput(e, 'pista')}
+          />
+        </div>
+        <button onClick={manejarAgregarEjercicio} className="btn-primary">Agregar Ejercicio</button>
       </div>
-      <div className="form-group">
-        <label>Palabras Clave (separadas por comas):</label>
-        <input
-          type="text"
-          value={nuevoEjercicio.palabrasClave.join(', ')}
-          onChange={(e) => manejarCambioInput(e, 'palabrasClave')}
-        />
-      </div>
-      <div className="form-group">
-        <label>Respuestas Aceptables (separadas por comas):</label>
-        <input
-          type="text"
-          value={nuevoEjercicio.respuestasAceptables.join(', ')}
-          onChange={(e) => manejarCambioInput(e, 'respuestasAceptables')}
-        />
-      </div>
-      <div className="form-group">
-        <label>Dificultad:</label>
-        <select
-          value={nuevoEjercicio.dificultad}
-          onChange={(e) => manejarCambioInput(e, 'dificultad')}
-        >
-          <option value="fácil">Fácil</option>
-          <option value="medio">Medio</option>
-          <option value="difícil">Difícil</option>
-        </select>
-      </div>
-      <div className="form-group">
-        <label>Categoría:</label>
-        <input
-          type="text"
-          value={nuevoEjercicio.categoria}
-          onChange={(e) => manejarCambioInput(e, 'categoria')}
-        />
-      </div>
-      <div className="form-group">
-        <label>Pista:</label>
-        <input
-          type="text"
-          value={nuevoEjercicio.pista}
-          onChange={(e) => manejarCambioInput(e, 'pista')}
-        />
-      </div>
-      <button onClick={manejarAgregarEjercicio}>Agregar Ejercicio</button>
 
-      <h3>Subir Archivo Excel</h3>
-      <input type="file" accept=".xlsx, .xls" onChange={manejarSubirArchivo} />
-
-      <h3>Ejercicios Actuales</h3>
-      <div className="search-container">
-        <input
-          type="text"
-          placeholder="Buscar ejercicios..."
-          value={filtro}
-          onChange={(e) => setFiltro(e.target.value)}
-        />
+      <div className="admin-section">
+        <h3>Subir Archivo Excel</h3>
+        <input type="file" accept=".xlsx, .xls" onChange={manejarSubirArchivo} />
       </div>
-      <ul className="ejercicios-lista">
-        {ejerciciosFiltrados.map((ejercicio) => (
-          <li key={ejercicio.id} className="ejercicio-item">
-            {ejercicioEditando && ejercicioEditando.id === ejercicio.id ? (
-              <div className="ejercicio-edit">
-                <input
-                  value={ejercicioEditando.pregunta}
-                  onChange={(e) => setEjercicioEditando({...ejercicioEditando, pregunta: e.target.value})}
-                  placeholder="Pregunta"
-                />
-                <input
-                  value={ejercicioEditando.respuestas_aceptables ? ejercicioEditando.respuestas_aceptables.join(', ') : ''}
-                  onChange={(e) => setEjercicioEditando({...ejercicioEditando, respuestas_aceptables: e.target.value.split(',').map(a => a.trim())})}
-                  placeholder="Respuestas Aceptables"
-                />
-                <select
-                  value={ejercicioEditando.dificultad}
-                  onChange={(e) => setEjercicioEditando({...ejercicioEditando, dificultad: e.target.value})}
-                >
-                  <option value="fácil">Fácil</option>
-                  <option value="medio">Medio</option>
-                  <option value="difícil">Difícil</option>
-                </select>
-                <input
-                  value={ejercicioEditando.categoria}
-                  onChange={(e) => setEjercicioEditando({...ejercicioEditando, categoria: e.target.value})}
-                  placeholder="Categoría"
-                />
-                <input
-                  value={ejercicioEditando.pista}
-                  onChange={(e) => setEjercicioEditando({...ejercicioEditando, pista: e.target.value})}
-                  placeholder="Pista"
-                />
-                <div className="button-group">
-                  <button onClick={() => manejarActualizarEjercicio(ejercicioEditando)}>Guardar</button>
-                  <button onClick={() => setEjercicioEditando(null)}>Cancelar</button>
+
+      <div className="admin-section">
+        <h3>Ejercicios Actuales</h3>
+        <div className="search-container">
+          <input
+            type="text"
+            placeholder="Buscar ejercicios..."
+            value={filtro}
+            onChange={(e) => setFiltro(e.target.value)}
+          />
+        </div>
+        <ul className="ejercicios-lista">
+          {ejerciciosFiltrados.map((ejercicio) => (
+            <li key={ejercicio.id} className="ejercicio-item">
+              {ejercicioEditando && ejercicioEditando.id === ejercicio.id ? (
+                <div className="ejercicio-edit">
+                  <input
+                    value={ejercicioEditando.pregunta}
+                    onChange={(e) => setEjercicioEditando({...ejercicioEditando, pregunta: e.target.value})}
+                    placeholder="Pregunta"
+                  />
+                  <input
+                    value={ejercicioEditando.respuestas_aceptables ? ejercicioEditando.respuestas_aceptables.join(', ') : ''}
+                    onChange={(e) => setEjercicioEditando({...ejercicioEditando, respuestas_aceptables: e.target.value.split(',').map(a => a.trim())})}
+                    placeholder="Respuestas Aceptables"
+                  />
+                  <select
+                    value={ejercicioEditando.dificultad}
+                    onChange={(e) => setEjercicioEditando({...ejercicioEditando, dificultad: e.target.value})}
+                  >
+                    <option value="fácil">Fácil</option>
+                    <option value="medio">Medio</option>
+                    <option value="difícil">Difícil</option>
+                  </select>
+                  <input
+                    value={ejercicioEditando.categoria}
+                    onChange={(e) => setEjercicioEditando({...ejercicioEditando, categoria: e.target.value})}
+                    placeholder="Categoría"
+                  />
+                  <input
+                    value={ejercicioEditando.pista}
+                    onChange={(e) => setEjercicioEditando({...ejercicioEditando, pista: e.target.value})}
+                    placeholder="Pista"
+                  />
+                  <div className="button-group">
+                    <button onClick={() => manejarActualizarEjercicio(ejercicioEditando)} className="btn-primary">Guardar</button>
+                    <button onClick={() => setEjercicioEditando(null)} className="btn-secondary">Cancelar</button>
+                  </div>
                 </div>
-              </div>
-            ) : (
-              <div className="ejercicio-view">
-                <h4>{ejercicio.pregunta}</h4>
-                <p><strong>Respuestas:</strong> {ejercicio.respuestas_aceptables ? ejercicio.respuestas_aceptables.join(', ') : ''}</p>
-                <p><strong>Dificultad:</strong> {ejercicio.dificultad}</p>
-                <p><strong>Categoría:</strong> {ejercicio.categoria}</p>
-                <p><strong>Pista:</strong> {ejercicio.pista}</p>
-                <div className="button-group">
-                  <button onClick={() => manejarEditarEjercicio(ejercicio)}>Editar</button>
-                  <button onClick={() => manejarEliminarEjercicio(ejercicio.id)}>Eliminar</button>
+              ) : (
+                <div className="ejercicio-view">
+                  <h4>{ejercicio.pregunta}</h4>
+                  <p><strong>Respuestas:</strong> {ejercicio.respuestas_aceptables ? ejercicio.respuestas_aceptables.join(', ') : ''}</p>
+                  <p><strong>Dificultad:</strong> {ejercicio.dificultad}</p>
+                  <p><strong>Categoría:</strong> {ejercicio.categoria}</p>
+                  <p><strong>Pista:</strong> {ejercicio.pista}</p>
+                  <div className="button-group">
+                    <button onClick={() => manejarEditarEjercicio(ejercicio)} className="btn-secondary">Editar</button>
+                    <button onClick={() => manejarEliminarEjercicio(ejercicio.id)} className="btn-danger">Eliminar</button>
+                  </div>
                 </div>
-              </div>
-            )}
-          </li>
-        ))}
-      </ul>
+              )}
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
   );
 }

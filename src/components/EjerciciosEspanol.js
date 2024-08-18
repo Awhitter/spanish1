@@ -1,10 +1,12 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useContext } from 'react';
 import { CSSTransition } from 'react-transition-group';
+import { DarkModeContext } from '../App';
 import './EjerciciosEspanol.css';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000';
 
 function EjerciciosEspanol() {
+  const { darkMode } = useContext(DarkModeContext);
   const [ejercicios, setEjercicios] = useState([]);
   const [ejercicioActual, setEjercicioActual] = useState(null);
   const [respuestaUsuario, setRespuestaUsuario] = useState('');
@@ -12,7 +14,6 @@ function EjerciciosEspanol() {
   const [estadisticas, setEstadisticas] = useState({ correctas: 0, incorrectas: 0, saltadas: 0 });
   const [mostrarPista, setMostrarPista] = useState(false);
   const [animacionSalida, setAnimacionSalida] = useState(false);
-  const [modoOscuro, setModoOscuro] = useState(false);
   const [progreso, setProgreso] = useState(0);
 
   const obtenerEjercicios = useCallback(async () => {
@@ -101,20 +102,13 @@ function EjerciciosEspanol() {
     };
   }, [manejarTeclas]);
 
-  const toggleModoOscuro = useCallback(() => {
-    setModoOscuro(prev => !prev);
-  }, []);
-
   if (!ejercicioActual) {
-    return <div>Cargando ejercicios...</div>;
+    return <div className="loading">Cargando ejercicios...</div>;
   }
 
   return (
-    <div className={`ejercicios-espanol ${modoOscuro ? 'modo-oscuro' : ''}`}>
+    <div className={`ejercicios-espanol ${darkMode ? 'dark-mode' : ''}`}>
       <h2>Ejercicios de Español</h2>
-      <button onClick={toggleModoOscuro} className="toggle-modo-oscuro">
-        {modoOscuro ? '☀️' : '🌙'}
-      </button>
       <div className="barra-progreso">
         <div className="progreso" style={{ width: `${progreso}%` }}></div>
       </div>
